@@ -4,12 +4,14 @@ Zgodnie ze Standardem Architektury Nesta Home Master Tracker v4.16.
 """
 
 from typing import Optional
-from fastapi import APIRouter, Depends, Request
+from datetime import datetime, timezone
+from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlmodel import Session, select, or_
 from app.core.database import get_session
 from app.core.templates import templates
 from app.models.listing import Listing
+from app.engine.freshness_checker import check_single_url_alive
 
 router = APIRouter(tags=["Feed"])
 
@@ -182,3 +184,40 @@ def index_view(
             "active_filters_count": active_filters_count
         }
     )
+
+@router.post("/api/v1/listings/{listing_id}/archive")
+def archive_listing_endpoint(listing_id: int, session: Session = Depends(get_session)):
+    """Ręczna deaktywacja i archiwizacja oferty (usuwa z głównego widoku okazji)"""
+    listing = session.get(Listing, listing_id)
+    if not listing:
+        raise HTTPException(status_code=404, detail="Oferta nie istnieje")
+    
+    listing.is_active = False
+    listing.status = "ARCHIVED"
+    listing.updated_at = datetime.now(timezone.utc)
+    session.add(listing)
+    session.commit()
+    return {"status": "success", "message": f"Oferta #{listing_id} została zarchiwizowana", "is_active": False}
+
+@router.post("/api/v1/listings/{listing_id}/check-freshness")
+def check_single_listing_freshness(listing_id: int, session: Session = Depends(get_session)):
+    """Sprawdza na żywo czy ogłoszenie jest nadal aktywne na portalu źródłowym"""
+    listing = session.get(Listing, listing_id)
+    if not listing:
+        raise HTTPException(status_code=404, detail="Oferta nie istnieje")
+    if not listing.url:
+        return {"status": "skipped", "message": "Brak linku do weryfikacji", "is_alive": True}
+
+    is_alive, reason = check_single_url_alive(listing.url)
+    if not is_alive:
+        listing.is_active = False
+        listing.status = "ARCHIVED"
+        listing.updated_at = datetime.now(timezone.utc)
+        session.add(listing)
+        session.commit()
+        return {"status": "archived", "is_alive": False, "reason": reason}
+
+    listing.updated_at = datetime.now(timezone.utc)
+    session.add(listing)
+    session.commit()
+    return {"status": "active", "is_alive": True, "reason": reason}

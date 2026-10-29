@@ -19,6 +19,10 @@
                 <i class="fa-solid fa-vial-circle-check mr-2" :class="{ 'fa-spin': testingAll }"></i>
                 <span x-text="testingAll ? 'Trwa testowanie wszystkich...' : 'Przetestuj wszystkie źródła'"></span>
             </button>
+            <button @click="triggerFreshnessNow()" :disabled="verifyingFreshness" class="bg-sand-200 hover:bg-sand-300 text-stone-900 border border-sand-300 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-xs flex items-center">
+                <i class="fa-solid fa-broom mr-2" :class="{ 'fa-spin': verifyingFreshness }"></i>
+                <span x-text="verifyingFreshness ? 'Weryfikacja linków...' : 'Weryfikuj aktualność ofert'"></span>
+            </button>
             <button @click="triggerScrapeNow()" :disabled="scraping" class="bg-stone-850 hover:bg-stone-700 text-sand-50 border border-stone-700 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-xs flex items-center">
                 <i class="fa-solid fa-arrows-rotate mr-2" :class="{ 'fa-spin': scraping }"></i>
                 <span x-text="scraping ? 'Skanowanie ofert...' : 'Uruchom skanowanie ofert'"></span>
@@ -269,6 +273,21 @@
             testing: {},
             testingAll: false,
             scraping: false,
+            verifyingFreshness: false,
+
+            async triggerFreshnessNow() {
+                this.verifyingFreshness = true;
+                try {
+                    const resp = await fetch('/api/v1/verify-freshness?limit=50', { method: 'POST' });
+                    const data = await resp.json();
+                    alert(`Weryfikacja aktualności zakończona!\nSprawdzono ofert: ${data.checked}\nZarchiwizowano nieaktualnych: ${data.archived}\nNadal aktywnych: ${data.still_active}`);
+                    window.location.reload();
+                } catch (e) {
+                    alert('Wystąpił błąd weryfikacji: ' + e);
+                } finally {
+                    this.verifyingFreshness = false;
+                }
+            },
 
             async testSource(id) {
                 this.testing[id] = true;

@@ -17,6 +17,7 @@ from app.ingestion.otodom import OtodomConnector
 from app.ingestion.spoldzielnie import SpoldzielnieConnector
 from app.ingestion.lento import LentoConnector
 from app.ingestion.kurier import KurierConnector
+from app.engine.freshness_checker import verify_active_listings_batch
 
 scheduler = BackgroundScheduler(daemon=True)
 
@@ -52,9 +53,20 @@ def scheduled_scraping_job():
                 print(f"[Scheduler Error for item]: {e}")
     print("[Scheduler] Zakończono cykliczne skanowanie.")
 
+def scheduled_freshness_job():
+    """Cykliczne sprawdzanie czy aktywne oferty na portalach nie wygasły lub nie zostały skasowane"""
+    print("[Scheduler] Uruchamiam cykliczne sprawdzanie aktualności ofert (Freshness Checker)...")
+    try:
+        with Session(engine) as session:
+            res = verify_active_listings_batch(session, limit=30)
+            print(f"[Scheduler Freshness] Sprawdzono: {res.get('checked')}, zarchiwizowano wygasłych: {res.get('archived')}, nadal aktywnych: {res.get('still_active')}")
+    except Exception as e:
+        print(f"[Scheduler Freshness Error]: {e}")
+
 def start_scheduler():
     if not scheduler.running:
         scheduler.add_job(scheduled_scraping_job, "interval", minutes=30, id="portal_scraper")
+        scheduler.add_job(scheduled_freshness_job, "interval", hours=4, id="freshness_verifier")
         scheduler.start()
 
 def stop_scheduler():

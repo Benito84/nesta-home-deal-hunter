@@ -13,6 +13,7 @@ from app.core.config import settings
 from app.core.templates import templates
 from app.models.source import ScraperSource
 from app.engine.health_check import test_source_health, test_all_active_sources
+from app.engine.freshness_checker import verify_active_listings_batch
 from app.ingestion.pipeline import process_raw_listing
 from app.ingestion.infoludek import InfoludekConnector
 from app.ingestion.portals import PortalsConnector
@@ -142,4 +143,15 @@ def trigger_scrape_endpoint(session: Session = Depends(get_session)):
         "fetched_total": len(raw_items),
         "saved": processed_count,
         "qualified_hot_deals": qualified_count
+    }
+
+@router.post("/api/v1/verify-freshness")
+def verify_freshness_endpoint(limit: int = 50, session: Session = Depends(get_session)):
+    """Ręczne wyzwolenie weryfikatora aktualności ofert (Freshness Checker)"""
+    res = verify_active_listings_batch(session, limit=limit)
+    return {
+        "status": "success",
+        "checked": res["checked"],
+        "archived": res["archived"],
+        "still_active": res["still_active"]
     }

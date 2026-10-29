@@ -480,7 +480,14 @@
                     <a href="{{ item.url }}" target="_blank" class="text-xs font-semibold text-slate-700 hover:text-slate-900 inline-flex items-center">
                         <i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i>Otwórz Źródło
                     </a>
+                    <button @click="checkFreshness({{ item.id }})" :disabled="checkingId === {{ item.id }}" class="text-xs font-medium text-slate-500 hover:text-stone-900 inline-flex items-center transition" title="Sprawdź na żywo czy ogłoszenie jest nadal aktywne na portalu">
+                        <i class="fa-solid fa-arrows-rotate mr-1" :class="{ 'fa-spin': checkingId === {{ item.id }} }"></i>
+                        <span x-text="checkingId === {{ item.id }} ? 'Badanie...' : 'Sprawdź link'"></span>
+                    </button>
                     {% endif %}
+                    <button @click="archiveListing({{ item.id }})" class="text-xs font-medium text-slate-400 hover:text-rose-600 inline-flex items-center transition" title="Zdeaktywuj i przenieś do archiwum (jeśli oferta wygasła)">
+                        <i class="fa-solid fa-box-archive mr-1"></i>Archiwizuj
+                    </button>
                 </div>
 
                 <div class="flex items-center space-x-2">
@@ -519,6 +526,7 @@
         return {
             scraping: false,
             syncingId: null,
+            checkingId: null,
             showAdvanced: {{ 'true' if (price_min is not none or price_max is not none or area_min is not none or area_max is not none or (rooms and rooms != 'ALL') or (building_type and building_type != 'ALL') or (heating and heating != 'ALL') or direct_only or has_balcony or min_roi) else 'false' }},
 
             async triggerScrape() {
@@ -573,6 +581,41 @@
                     window.location.reload();
                 } catch (e) {
                     alert('Błąd zapisu feedbacku: ' + e);
+                }
+            },
+
+            async checkFreshness(listingId) {
+                this.checkingId = listingId;
+                try {
+                    const resp = await fetch(`/api/v1/listings/${listingId}/check-freshness`, { method: 'POST' });
+                    const res = await resp.json();
+                    if (res.status === 'archived') {
+                        alert(`Ogłoszenie nie jest już aktywne na portalu!\nPowód: ${res.reason}\nOferta została zarchiwizowana.`);
+                        window.location.reload();
+                    } else if (res.status === 'active') {
+                        alert(`Oferta jest nadal aktywna na portalu!\nStatus: ${res.reason}`);
+                    } else {
+                        alert(res.message || 'Status sprawdzony');
+                    }
+                } catch (e) {
+                    alert('Błąd podczas sprawdzania aktualności: ' + e);
+                } finally {
+                    this.checkingId = null;
+                }
+            },
+
+            async archiveListing(listingId) {
+                if (!confirm('Czy na pewno chcesz zarchiwizować tę ofertę i przenieść ją poza listę aktywnych okazji?')) return;
+                try {
+                    const resp = await fetch(`/api/v1/listings/${listingId}/archive`, { method: 'POST' });
+                    const res = await resp.json();
+                    if (resp.status === 'success') {
+                        window.location.reload();
+                    } else {
+                        alert(res.detail || 'Błąd archiwizacji');
+                    }
+                } catch (e) {
+                    alert('Błąd: ' + e);
                 }
             }
         }
