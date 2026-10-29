@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Szybka wklejka | Nesta Home Deal Hunter{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6" x-data="quickIngest()">
+
+    <!-- Benchmarkowy Ciemny Nagłówek Ekranu (Sekcja 2.3) -->
+    <div class="bg-stone-950 text-sand-100 rounded-2xl p-6 sm:p-8 shadow-xs border border-stone-850 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+            <div class="text-[10px] uppercase font-bold tracking-widest text-sand-400">Autonomiczny Ingestion / Sourcing</div>
+            <h2 class="font-serif text-2xl font-bold tracking-tight text-sand-50 mt-1">Szybka wklejka</h2>
+            <p class="text-stone-400 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
+                Wprowadź ofertę w najwygodniejszy sposób: wklej link ze strony, załącz zrzut ekranu lub wklej treść posta. Silnik automatycznie rozpozna metraż, cenę, dzielnicę, wyliczy koszty remontu i sprawdzi rentowność ROI.
+            </p>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+            <a href="/" class="bg-sand-100 hover:bg-sand-200 text-stone-950 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-xs flex items-center">
+                <i class="fa-solid fa-arrow-left mr-2"></i>Wróć do bazy
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert błędu jeśli wystąpił -->
+    {% if error %}
+    <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex items-start gap-3">
+        <div class="text-rose-600 mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="text-xs text-rose-800 leading-relaxed">
+            <strong class="font-bold block mb-0.5">Wymagana uwaga:</strong>
+            {{ error }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Główny Formularz (Tylko Link, Print Screen lub Tekst) -->
+    <form method="POST" action="/quick-ingest" enctype="multipart/form-data" @submit="submitting = true" class="bg-white p-6 sm:p-8 rounded-2xl border border-sand-300 shadow-xs space-y-6">
+        
+        <!-- Przełącznik formatu (Wybór najwygodniejszej metody) -->
+        <div class="flex items-center p-1 bg-sand-100 rounded-xl border border-sand-200 gap-1 text-xs font-bold">
+            <button type="button" @click="activeTab = 'link'" :class="activeTab === 'link' ? 'bg-stone-950 text-sand-50 shadow-xs' : 'text-stone-600 hover:text-stone-950'" class="flex-1 py-2 px-3 rounded-lg transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-link"></i>
+                <span>Link do strony</span>
+            </button>
+            <button type="button" @click="activeTab = 'image'" :class="activeTab === 'image' ? 'bg-stone-950 text-sand-50 shadow-xs' : 'text-stone-600 hover:text-stone-950'" class="flex-1 py-2 px-3 rounded-lg transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-image"></i>
+                <span>Print screen</span>
+            </button>
+            <button type="button" @click="activeTab = 'text'" :class="activeTab === 'text' ? 'bg-stone-950 text-sand-50 shadow-xs' : 'text-stone-600 hover:text-stone-950'" class="flex-1 py-2 px-3 rounded-lg transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-align-left"></i>
+                <span>Wklejony tekst</span>
+            </button>
+        </div>
+
+        <!-- 1. Opcja: Link do ogłoszenia -->
+        <div x-show="activeTab === 'link'" x-transition.duration.150ms class="space-y-2">
+            <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider">
+                Adres strony internetowej lub link do oferty
+            </label>
+            <div class="relative">
+                <i class="fa-solid fa-globe absolute left-4 top-3.5 text-stone-400 text-sm"></i>
+                <input type="url" name="url" value="{{ url }}" x-ref="urlInput" placeholder="https://www.otodom.pl/... lub link do ogłoszenia OLX, Facebook, Gratka, ZBiLK" class="w-full text-sm bg-sand-50 border border-sand-300 rounded-xl pl-11 pr-4 py-3 text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+            </div>
+            <p class="text-[11px] text-stone-500">
+                Silnik automatycznie pobierze treść ogłoszenia, metraż, cenę, zdjęcia i opis bezpośrednio z portalu.
+            </p>
+        </div>
+
+        <!-- 2. Opcja: Print screen (Zrzut ekranu) -->
+        <div x-show="activeTab === 'image'" x-transition.duration.150ms class="space-y-3" style="display: none;">
+            <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider">
+                Zrzut ekranu (Print screen) lub plik graficzny
+            </label>
+            
+            <div 
+                @dragover.prevent="dragOver = true" 
+                @dragleave.prevent="dragOver = false" 
+                @drop.prevent="handleDrop($event)"
+                :class="dragOver ? 'border-stone-950 bg-sand-100' : 'border-sand-300 bg-sand-50'"
+                class="border-2 border-dashed rounded-2xl p-6 text-center transition cursor-pointer hover:bg-sand-100/70"
+                @click="$refs.fileInput.click()">
+                
+                <input type="file" name="screenshot" accept="image/*" x-ref="fileInput" @change="handleFileSelect($event)" class="hidden">
+                
+                <template x-if="!imagePreview">
+                    <div class="space-y-2 py-4">
+                        <div class="w-12 h-12 rounded-full bg-sand-200 flex items-center justify-center mx-auto text-stone-700 text-xl">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                        <p class="text-xs font-bold text-stone-900">
+                            Przeciągnij plik tutaj, kliknij aby wybrać lub wklej ze schowka (<kbd class="px-1.5 py-0.5 bg-sand-200 rounded text-[10px] font-mono">Ctrl+V</kbd>)
+                        </p>
+                        <p class="text-[11px] text-stone-500">
+                            Obsługuje zrzuty ekranu z telefonu, Messengera, grup na Facebooku i portali ogłoszeniowych (PNG, JPG, WebP)
+                        </p>
+                    </div>
+                </template>
+
+                <template x-if="imagePreview">
+                    <div class="space-y-3">
+                        <div class="relative inline-block max-w-full">
+                            <img :src="imagePreview" alt="Podgląd zrzutu ekranu" class="max-h-64 rounded-xl border border-sand-300 shadow-xs mx-auto object-contain">
+                            <button type="button" @click.stop="clearImage()" class="absolute -top-2 -right-2 bg-stone-950 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-rose-700 transition">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-stone-600 font-medium" x-text="fileName"></p>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- 3. Opcja: Wklejony tekst -->
+        <div x-show="activeTab === 'text'" x-transition.duration.150ms class="space-y-2" style="display: none;">
+            <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider">
+                Wklej treść ogłoszenia lub posta
+            </label>
+            <textarea name="raw_text" rows="7" placeholder="Wklej dowolny fragment tekstu z grupy na Facebooku, wiadomości od agenta nieruchomości lub portalu:&#10;&#10;np. Sprzedam 2 pokoje w kamienicy na Turzynie, 48 m2, ul. Bohaterów Warszawy. Ogrzewanie piece kaflowe. Cena: 239 tys. zł..." class="w-full text-sm bg-sand-50 border border-sand-300 rounded-xl p-4 text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-stone-950 focus:outline-none leading-relaxed">{{ raw_text }}</textarea>
+            <p class="text-[11px] text-stone-500">
+                Silnik automatycznie rozpozna cenę, metraż, liczbę pokoi, piętro, ujęcie gazu oraz dzielnicę Szczecina.
+            </p>
+        </div>
+
+        <!-- Stopka formularza z pojedynczym przyciskiem akcji -->
+        <div class="pt-4 border-t border-sand-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-[11px] text-stone-500 flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-stone-400"></i>
+                <span>Brak dodatkowych formularzy &bull; Automatyczna ewaluacja ROI Nesta Home</span>
+            </div>
+
+            <button type="submit" :disabled="submitting" class="w-full sm:w-auto px-6 py-3 bg-stone-950 hover:bg-stone-850 text-sand-50 text-xs font-bold rounded-xl transition shadow-xs flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-bolt" :class="{ 'fa-spin': submitting }"></i>
+                <span x-text="submitting ? 'Przetwarzanie i analiza...' : 'Przeanalizuj i dodaj okazję'"></span>
+            </button>
+        </div>
+
+    </form>
+
+    <!-- Karta informacyjna jak działa automatyczny analityk -->
+    <div class="bg-sand-100 rounded-2xl p-5 border border-sand-200 text-xs text-stone-600 leading-relaxed">
+        <h4 class="font-bold text-stone-900 mb-1 flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-amber-700"></i>
+            Jak działa automatyczne przetwarzanie?
+        </h4>
+        <p>
+            Po przesłaniu linku, zrzutu ekranu lub tekstu system autonomicznie wykonuje:
+            ekstrakcję parametrów fizycznych lokalu, weryfikację ze średnią ceną transakcyjną dzielnicy w Szczecinie, kalkulację kosztów remontu według standardu Nesta Home, symulację wyjścia ARV oraz kalkulację twardej bramki inwestycyjnej (ROI &ge; 16.0% oraz zysk netto &ge; 30 000 zł).
+        </p>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function quickIngest() {
+        return {
+            activeTab: '{{ 'text' if raw_text else ('link' if url else 'link') }}',
+            submitting: false,
+            dragOver: false,
+            imagePreview: null,
+            fileName: '',
+
+            init() {
+                // Globalny nasłuch na wklejanie ze schowka (Ctrl+V) dla zrzutów ekranu
+                window.addEventListener('paste', (e) => {
+                    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                    for (let item of items) {
+                        if (item.type.indexOf('image') === 0) {
+                            const blob = item.getAsFile();
+                            this.setImageFile(blob, 'wklejony-zrzut-ekranu.png');
+                            this.activeTab = 'image';
+                            break;
+                        }
+                    }
+                });
+            },
+
+            handleFileSelect(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    this.setImageFile(file, file.name);
+                }
+            },
+
+            handleDrop(e) {
+                this.dragOver = false;
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    this.setImageFile(file, file.name);
+                    this.activeTab = 'image';
+                }
+            },
+
+            setImageFile(file, name) {
+                this.fileName = name;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.imagePreview = e.target.result;
+                };
+                reader.readAsDataURL(file);
+
+                // Przypisanie pliku do inputu file
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                this.$refs.fileInput.files = dataTransfer.files;
+            },
+
+            clearImage() {
+                this.imagePreview = null;
+                this.fileName = '';
+                this.$refs.fileInput.value = '';
+            }
+        }
+    }
+</script>
+{% endblock %}

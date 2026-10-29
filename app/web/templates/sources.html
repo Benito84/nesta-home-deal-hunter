@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnostyka źródeł i kolejka scraperów | Nesta Home Deal Hunter{% endblock %}
+
+{% block content %}
+<div x-data="sourcesManager()" class="space-y-8">
+
+    <!-- Benchmarkowy Ciemny Nagłówek Ekranu (Sekcja 2.3) -->
+    <div class="bg-stone-950 text-sand-100 rounded-2xl p-6 sm:p-8 shadow-xs border border-stone-850 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+            <div class="text-[10px] uppercase font-bold tracking-widest text-sand-400">Monitoring sprawności / Sourcing backlog</div>
+            <h2 class="font-serif text-2xl font-bold tracking-tight text-sand-50 mt-1">Diagnostyka źródeł i scraperów</h2>
+            <p class="text-stone-400 text-xs sm:text-sm mt-1 max-w-3xl leading-relaxed">
+                Monitoruj stan techniczny scraperów, weryfikuj dostępność stron i zapobiegaj cichym awariom parserów. Zgłaszaj nowe portale i grupy do kolejki analizy programistycznej.
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
+            <button @click="testAllSources()" :disabled="testingAll" class="bg-sand-100 hover:bg-sand-200 text-stone-950 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-xs flex items-center">
+                <i class="fa-solid fa-vial-circle-check mr-2" :class="{ 'fa-spin': testingAll }"></i>
+                <span x-text="testingAll ? 'Trwa testowanie wszystkich...' : 'Przetestuj wszystkie źródła'"></span>
+            </button>
+            <button @click="triggerScrapeNow()" :disabled="scraping" class="bg-stone-850 hover:bg-stone-700 text-sand-50 border border-stone-700 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-xs flex items-center">
+                <i class="fa-solid fa-arrows-rotate mr-2" :class="{ 'fa-spin': scraping }"></i>
+                <span x-text="scraping ? 'Skanowanie ofert...' : 'Uruchom skanowanie ofert'"></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabela 1: Aktywne Silniki i Stan Techniczny (Live Scrapers Health) -->
+    <div>
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h3 class="text-xl font-serif font-bold text-stone-950">Aktywne silniki i stan techniczny (Live scrapers)</h3>
+                <p class="text-xs text-stone-600 mt-0.5">
+                    Scrapery cyklicznie przeczesujące rynek szczeciński. Kliknij „Testuj”, aby potwierdzić czy portal odpowiada i selektory działają poprawnie.
+                </p>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-sand-100 text-stone-800 border border-sand-300">
+                Aktywne źródła: {{ active_sources|length }}
+            </span>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-sand-300 shadow-xs overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-sand-50 border-b border-sand-300 text-[11px] uppercase text-stone-600 font-bold tracking-wider">
+                    <tr>
+                        <th class="px-6 py-3.5">Źródło i portal</th>
+                        <th class="px-6 py-3.5">Kategoria</th>
+                        <th class="px-6 py-3.5">Status techniczny</th>
+                        <th class="px-6 py-3.5">Czas odpowiedzi</th>
+                        <th class="px-6 py-3.5">Ostatni wynik i próbka</th>
+                        <th class="px-6 py-3.5">Ostatni test</th>
+                        <th class="px-6 py-3.5 text-right">Diagnostyka</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-sand-200">
+                    {% for src in active_sources %}
+                    <tr class="hover:bg-sand-50/60 transition" id="source-row-{{ src.id }}">
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-stone-950 flex items-center space-x-2">
+                                <span>{{ src.name }}</span>
+                            </div>
+                            <span class="text-[11px] text-stone-500 font-mono block truncate max-w-xs" title="{{ src.url }}">{{ src.url }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sand-100 text-stone-700 border border-sand-200">
+                                {{ src.tier }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4" id="status-cell-{{ src.id }}">
+                            {% if src.status == 'HEALTHY' %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500"></span>Sprawny
+                            </span>
+                            {% elif src.status == 'WARNING' %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-500"></span>Ostrzeżenie
+                            </span>
+                            {% elif src.status == 'ERROR' %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200">
+                                <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-rose-500"></span>Błąd
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-sand-100 text-stone-600 border border-sand-200">
+                                <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-stone-400"></span>Oczekuje
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 font-mono text-xs text-stone-700" id="latency-cell-{{ src.id }}">
+                            {% if src.last_latency_ms is not none %}
+                            {{ src.last_latency_ms }} ms
+                            {% else %}
+                            &ndash;
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-xs text-stone-700 max-w-xs" id="message-cell-{{ src.id }}">
+                            <p class="truncate font-medium text-stone-850" title="{{ src.last_message or 'Brak danych testowych' }}">
+                                {{ src.last_message or 'Kliknij Testuj połączenie' }}
+                            </p>
+                            {% if src.last_items_found is not none and src.last_items_found > 0 %}
+                            <span class="text-[11px] text-emerald-700 font-semibold">Pobrano w teście: {{ src.last_items_found }} ofert</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-xs text-stone-500" id="tested-cell-{{ src.id }}">
+                            {% if src.last_tested_at %}
+                            {{ src.last_tested_at.strftime('%d.%m %H:%M') }}
+                            {% else %}
+                            Nigdy
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button @click="testSource({{ src.id }})" :disabled="testing[{{ src.id }}]" class="px-3.5 py-1.5 bg-stone-950 hover:bg-stone-850 text-sand-50 rounded-xl text-xs font-bold transition shadow-xs inline-flex items-center">
+                                <i class="fa-solid fa-play mr-1.5 text-[10px]" :class="{ 'fa-spin fa-spinner': testing[{{ src.id }}] }"></i>
+                                <span x-text="testing[{{ src.id }}] ? 'Badam...' : 'Testuj'"></span>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Sekcja 2: Kolejka Źródeł i Formularz Dodania (Sourcing Backlog) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- Formularz dodania nowej strony do kolejki -->
+        <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs h-fit">
+            <h4 class="text-xs font-bold text-stone-950 uppercase tracking-wider mb-2">Zgłoś nową stronę do analizy</h4>
+            <p class="text-xs text-stone-600 mb-4 leading-relaxed">
+                Wprowadź adres portalu, biuletynu spółdzielni lub grupy na Facebooku. Źródło trafi do kolejki, skąd asystent AI może je oprogramować.
+            </p>
+            <form method="POST" action="/api/v1/sources/add" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">Nazwa portalu lub źródła *</label>
+                    <input type="text" name="name" required placeholder="np. SM Wspólny Dom Szczecin" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl p-2.5 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">Adres URL *</label>
+                    <input type="url" name="url" required placeholder="https://..." class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl p-2.5 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">Kategoria źródła</label>
+                    <select name="tier" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl p-2.5 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                        <option value="Tier 1: Poza radarem">Tier 1: Poza radarem (Lokalne / Senioralne)</option>
+                        <option value="Tier 2: Portale i IMAP">Tier 2: Portale ogłoszeniowe</option>
+                        <option value="Kolejka: Do analizy" selected>Kolejka: Do analizy i oprogramowania</option>
+                        <option value="Przetargi i licytacje">Przetargi i licytacje komornicze</option>
+                        <option value="Grupy Facebook">Grupy Facebook i social media</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">Notatka operacyjna dla AI</label>
+                    <textarea name="notes" rows="2" placeholder="np. Sekcja przetargów na lokale do remontu, bez logowania..." class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl p-2.5 focus:ring-2 focus:ring-stone-950 focus:outline-none"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-stone-950 hover:bg-stone-850 text-sand-50 rounded-xl text-xs font-bold transition shadow-xs flex items-center justify-center">
+                    Dodaj źródło do kolejki
+                </button>
+            </form>
+        </div>
+
+        <!-- Tabela kolejki backlogu -->
+        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-sand-300 shadow-xs">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h4 class="text-xs font-bold text-stone-950 uppercase tracking-wider">Kolejka źródeł do oprogramowania ({{ queued_sources|length }})</h4>
+                    <p class="text-xs text-stone-600 mt-0.5">
+                        Zgłoszone strony i portale oczekujące na analizę techniczną i dedykowany konektor.
+                    </p>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                {% for q in queued_sources %}
+                <div class="p-4 rounded-xl bg-sand-50 border border-sand-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold text-stone-950 text-sm">{{ q.name }}</span>
+                            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-sand-200 text-stone-700">
+                                {{ q.tier }}
+                            </span>
+                        </div>
+                        <a href="{{ q.url }}" target="_blank" class="text-xs text-stone-500 hover:text-stone-900 font-mono block truncate max-w-md">
+                            {{ q.url }} <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1"></i>
+                        </a>
+                        {% if q.notes %}
+                        <p class="text-xs text-stone-600 italic">
+                            &bdquo;{{ q.notes }}&rdquo;
+                        </p>
+                        {% endif %}
+                        <div class="text-[11px] text-stone-500 pt-1" id="message-cell-{{ q.id }}">
+                            {{ q.last_message or 'Czeka na wdrożenie konektora w kodzie Python' }}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2 shrink-0">
+                        <button @click="testSource({{ q.id }})" :disabled="testing[{{ q.id }}]" class="px-3 py-1.5 bg-white hover:bg-sand-100 text-stone-900 border border-sand-300 rounded-xl text-xs font-semibold transition shadow-xs flex items-center">
+                            <i class="fa-solid fa-signal mr-1.5 text-[10px]" :class="{ 'fa-spin fa-spinner': testing[{{ q.id }}] }"></i>
+                            <span x-text="testing[{{ q.id }}] ? 'Badam...' : 'Sprawdź HTTP'"></span>
+                        </button>
+                        <form method="POST" action="/api/v1/sources/{{ q.id }}/delete" onsubmit="return confirm('Usunąć to źródło z kolejki?')">
+                            <button type="submit" class="px-2.5 py-1.5 text-stone-400 hover:text-rose-600 transition" title="Usuń z kolejki">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="p-8 text-center text-xs text-stone-400">
+                    Brak zgłoszonych stron w kolejce. Użyj formularza po lewej stronie, aby dodać pierwsze źródło.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Integracja Master Tracker & Webhook -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Tracker Info -->
+        <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sand-100 text-stone-850 border border-sand-300">
+                    Tier 3: Integracja
+                </span>
+                <span class="text-emerald-700 text-xs font-semibold flex items-center">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>Połączony
+                </span>
+            </div>
+            <h4 class="text-sm font-bold text-stone-950 mb-1">Nesta Home Master Tracker API v4.04</h4>
+            <p class="text-xs text-stone-600 mb-3 leading-relaxed">
+                Bezpośredni most z Poczekalnią Ofert Trackera na serwerze Mikrus (<code>POST /api/staging</code>).
+            </p>
+            <div class="p-3 bg-sand-50 rounded-xl text-xs space-y-1.5 text-stone-800 border border-sand-200">
+                <div class="flex justify-between">
+                    <span>Środowisko:</span>
+                    <strong class="text-stone-950 font-bold">{{ tracker_env }}</strong>
+                </div>
+                <div class="flex justify-between truncate">
+                    <span>Endpoint:</span>
+                    <span class="text-stone-500 truncate ml-2 text-[11px]" title="{{ tracker_url }}">{{ tracker_url }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Webhook Info -->
+        <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs">
+            <h4 class="text-xs font-bold text-stone-950 uppercase tracking-wider mb-2">
+                <i class="fa-solid fa-code mr-1.5 text-sand-500"></i>Zewnętrzny endpoint webhooka
+            </h4>
+            <p class="text-xs text-stone-600 mb-3 leading-relaxed">
+                Możesz wysyłać ustrukturyzowany JSON z botów, wtyczek przeglądarkowych lub skryptów grup FB bezpośrednio na poniższy adres:
+            </p>
+            <div class="p-3 bg-stone-950 rounded-xl text-emerald-400 font-mono text-xs overflow-x-auto border border-stone-850">
+                POST http://localhost:8000/api/v1/ingest/raw
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function sourcesManager() {
+        return {
+            testing: {},
+            testingAll: false,
+            scraping: false,
+
+            async testSource(id) {
+                this.testing[id] = true;
+                try {
+                    const resp = await fetch(`/api/v1/sources/${id}/test`, { method: 'POST' });
+                    const data = await resp.json();
+                    
+                    // Aktualizacja komórki statusu
+                    const statusCell = document.getElementById(`status-cell-${id}`);
+                    if (statusCell) {
+                        if (data.status === 'HEALTHY') {
+                            statusCell.innerHTML = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200"><span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500"></span>Sprawny</span>';
+                        } else if (data.status === 'WARNING') {
+                            statusCell.innerHTML = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200"><span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-500"></span>Ostrzeżenie</span>';
+                        } else {
+                            statusCell.innerHTML = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200"><span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-rose-500"></span>Błąd</span>';
+                        }
+                    }
+
+                    // Aktualizacja latencji
+                    const latencyCell = document.getElementById(`latency-cell-${id}`);
+                    if (latencyCell) {
+                        latencyCell.innerText = data.latency_ms + ' ms';
+                    }
+
+                    // Aktualizacja komunikatu
+                    const msgCell = document.getElementById(`message-cell-${id}`);
+                    if (msgCell) {
+                        let content = `<p class="truncate font-medium text-stone-850" title="${data.message}">${data.message}</p>`;
+                        if (data.items_found && data.items_found > 0) {
+                            content += `<span class="text-[11px] text-emerald-700 font-semibold">Pobrano w teście: ${data.items_found} ofert</span>`;
+                        }
+                        msgCell.innerHTML = content;
+                    }
+
+                    // Aktualizacja daty
+                    const testedCell = document.getElementById(`tested-cell-${id}`);
+                    if (testedCell) {
+                        testedCell.innerText = data.tested_at || 'Teraz';
+                    }
+
+                } catch (e) {
+                    alert('Błąd podczas testu: ' + e);
+                } finally {
+                    this.testing[id] = false;
+                }
+            },
+
+            async testAllSources() {
+                this.testingAll = true;
+                try {
+                    const resp = await fetch('/api/v1/sources/test-all', { method: 'POST' });
+                    const res = await resp.json();
+                    
+                    if (res.results) {
+                        for (const r of res.results) {
+                            const statusCell = document.getElementById(`status-cell-${r.id}`);
+                            if (statusCell) {
+                                if (r.status === 'HEALTHY') {
+                                    statusCell.innerHTML = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200"><span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500"></span>Sprawny</span>';
+                                } else if (r.status === 'WARNING') {
+                                    statusCell.innerHTML = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200"><span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-500"></span>Ostrzeżenie</span>';
+                                } else {
+                                    statusCell.innerHTML = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200"><span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-rose-500"></span>Błąd</span>';
+                                }
+                            }
+
+                            const latencyCell = document.getElementById(`latency-cell-${r.id}`);
+                            if (latencyCell) latencyCell.innerText = r.latency_ms + ' ms';
+
+                            const msgCell = document.getElementById(`message-cell-${r.id}`);
+                            if (msgCell) {
+                                let content = `<p class="truncate font-medium text-stone-850" title="${r.message}">${r.message}</p>`;
+                                if (r.items_found && r.items_found > 0) {
+                                    content += `<span class="text-[11px] text-emerald-700 font-semibold">Pobrano w teście: ${r.items_found} ofert</span>`;
+                                }
+                                msgCell.innerHTML = content;
+                            }
+
+                            const testedCell = document.getElementById(`tested-cell-${r.id}`);
+                            if (testedCell) testedCell.innerText = r.tested_at || 'Teraz';
+                        }
+                    }
+                } catch (e) {
+                    alert('Błąd testu zbiorczego: ' + e);
+                } finally {
+                    this.testingAll = false;
+                }
+            },
+
+            async triggerScrapeNow() {
+                this.scraping = true;
+                try {
+                    const resp = await fetch('/api/v1/trigger-scrape', { method: 'POST' });
+                    const data = await resp.json();
+                    alert(`Skanowanie zakończone sukcesem!\nPobrano łącznie: ${data.fetched_total} ofert\nZapisano nowych po filtrach: ${data.saved}\nZakwalifikowane jako okazje (DZWONIMY): ${data.qualified_hot_deals}`);
+                    window.location.href = '/';
+                } catch (e) {
+                    alert('Wystąpił błąd: ' + e);
+                } finally {
+                    this.scraping = false;
+                }
+            }
+        };
+    }
+</script>
+{% endblock %}

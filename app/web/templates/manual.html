@@ -1,0 +1,506 @@
+{% extends "base.html" %}
+
+{% block title %}Instrukcja i baza wiedzy | Nesta Home Deal Hunter{% endblock %}
+
+{% block content %}
+<div class="space-y-10" x-data="{ activeSection: 'workflow' }">
+
+    <!-- Benchmarkowy Ciemny Nagłówek Ekranu (Sekcja 2.3) -->
+    <div class="bg-stone-950 text-sand-100 rounded-2xl p-6 sm:p-8 shadow-xs border border-stone-850 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+            <div class="text-[10px] uppercase font-bold tracking-widest text-sand-400">Baza Wiedzy / Standard Operacyjny Nesta Home</div>
+            <h2 class="font-serif text-2xl font-bold tracking-tight text-sand-50 mt-1">Instrukcja obsługi i charakterystyka źródeł</h2>
+            <p class="text-stone-400 text-xs sm:text-sm mt-1 max-w-3xl leading-relaxed">
+                Kompendium wiedzy o architekturze systemu, algorytmach wyceny matematycznej, twardych bramkach inwestycyjnych oraz profilu 11 zintegrowanych źródeł sourcingu mieszkań w Szczecinie.
+            </p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+            <a href="/" class="bg-sand-100 hover:bg-sand-200 text-stone-950 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-xs flex items-center">
+                <i class="fa-solid fa-fire mr-2 text-stone-700"></i>Przejdź do feedu
+            </a>
+            <a href="/quick-ingest" class="bg-stone-850 hover:bg-stone-800 text-sand-100 px-4 py-2.5 rounded-xl text-xs font-bold transition border border-stone-700 flex items-center">
+                <i class="fa-solid fa-bolt mr-2 text-sand-400"></i>Szybka wklejka
+            </a>
+        </div>
+    </div>
+
+    <!-- Pasek Nawigacji Wewnętrznej Zakładki -->
+    <div class="flex items-center p-1.5 bg-white rounded-2xl border border-sand-300 shadow-xs gap-2">
+        <button type="button" @click="activeSection = 'workflow'" :class="activeSection === 'workflow' ? 'bg-stone-950 text-sand-50 shadow-xs' : 'text-stone-600 hover:text-stone-950 hover:bg-sand-100'" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-gears"></i>
+            <span>Jak działa aplikacja (Przepływ)</span>
+        </button>
+        <button type="button" @click="activeSection = 'sources'" :class="activeSection === 'sources' ? 'bg-stone-950 text-sand-50 shadow-xs' : 'text-stone-600 hover:text-stone-950 hover:bg-sand-100'" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-satellite-dish"></i>
+            <span>Dossier 11 źródeł ogłoszeń</span>
+        </button>
+        <button type="button" @click="activeSection = 'metrics'" :class="activeSection === 'metrics' ? 'bg-stone-950 text-sand-50 shadow-xs' : 'text-stone-600 hover:text-stone-950 hover:bg-sand-100'" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-calculator"></i>
+            <span>Wskaźniki finansowe i reguły</span>
+        </button>
+    </div>
+
+    <!-- SEKCJA 1: JAK DZIAŁA APLIKACJA (WORKFLOW) -->
+    <div x-show="activeSection === 'workflow'" x-transition.duration.200ms class="space-y-8">
+        
+        <!-- Wprowadzenie do lejka -->
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-sand-300 shadow-xs space-y-4">
+            <div class="text-[11px] uppercase font-bold tracking-wider text-amber-800">Architektura Lejka Sourcingowego</div>
+            <h3 class="font-serif text-xl font-bold text-stone-950">5 etapów od ogłoszenia w sieci do zakupu nieruchomości</h3>
+            <p class="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-4xl">
+                Aplikacja pełni rolę autonomicznego analityka nieruchomościowego, który pracuje nieprzerwanie 24/7. Każde ogłoszenie pojawiające się na szczecińskim rynku przechodzi przez wielostopniowy lejek weryfikacyjny, którego celem jest eliminacja 95% nieopłacalnych ofert oraz natychmiastowe wyłowienie rynkowych anomalii cenowych.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 pt-4">
+                <div class="p-4 rounded-xl bg-sand-50 border border-sand-200 space-y-2">
+                    <div class="w-8 h-8 rounded-lg bg-stone-950 text-sand-50 font-bold text-xs flex items-center justify-center">1</div>
+                    <h4 class="text-xs font-bold text-stone-900">Agregacja danych</h4>
+                    <p class="text-[11px] text-stone-500 leading-relaxed">Cykliczne skanery pobierają ogłoszenia z 10 portali oraz modułu Szybka wklejka.</p>
+                </div>
+                <div class="p-4 rounded-xl bg-sand-50 border border-sand-200 space-y-2">
+                    <div class="w-8 h-8 rounded-lg bg-stone-950 text-sand-50 font-bold text-xs flex items-center justify-center">2</div>
+                    <h4 class="text-xs font-bold text-stone-900">Filtr wstępny</h4>
+                    <p class="text-[11px] text-stone-500 leading-relaxed">Odsiewanie wynajmu, gotowych flipów w cenie rynkowej oraz deduplikacja SHA-256.</p>
+                </div>
+                <div class="p-4 rounded-xl bg-sand-50 border border-sand-200 space-y-2">
+                    <div class="w-8 h-8 rounded-lg bg-stone-950 text-sand-50 font-bold text-xs flex items-center justify-center">3</div>
+                    <h4 class="text-xs font-bold text-stone-900">Wycena kosztów</h4>
+                    <p class="text-[11px] text-stone-500 leading-relaxed">Kosztorys remontu według typu budynku, taksa notarialna, PCC 2% i bufor ryzyka.</p>
+                </div>
+                <div class="p-4 rounded-xl bg-sand-50 border border-sand-200 space-y-2">
+                    <div class="w-8 h-8 rounded-lg bg-stone-950 text-sand-50 font-bold text-xs flex items-center justify-center">4</div>
+                    <h4 class="text-xs font-bold text-stone-900">Bramka Nesta</h4>
+                    <p class="text-[11px] text-stone-500 leading-relaxed">Kalkulacja ROI oraz czystego zysku. Kwalifikacja DZWONIMY (ROI &ge; 16%) lub STOP.</p>
+                </div>
+                <div class="p-4 rounded-xl bg-sand-50 border border-sand-200 space-y-2">
+                    <div class="w-8 h-8 rounded-lg bg-stone-950 text-sand-50 font-bold text-xs flex items-center justify-center">5</div>
+                    <h4 class="text-xs font-bold text-stone-900">Master Tracker</h4>
+                    <p class="text-[11px] text-stone-500 leading-relaxed">Jednoklikowy eksport wyselekcjonowanej okazji do centralnego systemu operacyjnego.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Szczegółowe omówienie kroków -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-filter-circle-dollar"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-stone-900">Filtr antyspamowy i ochrona przed gotowcami</h4>
+                        <span class="text-[11px] text-stone-500">Etap 1 i 2 lejka decyzyjnego</span>
+                    </div>
+                </div>
+                <p class="text-xs text-stone-600 leading-relaxed">
+                    Większość agregatorów zaśmiecana jest ofertami mieszkań po świeżym remoncie wystawianymi przez innych inwestorów w maksymalnych cenach rynkowych. Silnik Nesta Home analizuje opisy pod kątem słów kluczowych (np. <em>„po generalnym remoncie”</em>, <em>„standard pod klucz”</em>) i zestawia cenę za m² z progiem ARV danej dzielnicy. Jeśli mieszkanie jest już wyremontowane, zostaje automatycznie odrzucone.
+                </p>
+                <div class="p-3 bg-sand-50 rounded-xl text-[11px] text-stone-600 border border-sand-200">
+                    <strong>Price Drop Tracker:</strong> System śledzi zmiany cen istniejących ogłoszeń. Jeśli właściciel obniży cenę, w karcie pojawia się zielona plakietka obniżki (np. <em>„Obniżka ceny o 12%”</em>).
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-fire-burner"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-stone-900">Złota reguła pieców kaflowych</h4>
+                        <span class="text-[11px] text-stone-500">Kluczowa przewaga konkurencyjna Nesta Home</span>
+                    </div>
+                </div>
+                <p class="text-xs text-stone-600 leading-relaxed">
+                    Tradycyjni klienci oraz początkujący inwestorzy panicznie boją się starych pieców kaflowych w kamienicach z uwagi na konieczność wymiany instalacji. <strong>Dla Nesta Home piece kaflowe to największy atut</strong>. Pozwalają drastycznie zbić cenę zakupu (często poniżej 4 500 – 5 500 zł/m² w centrum), podczas gdy nasza ekipa wykonuje rutynową konwersję na kocioł gazowy dwufunkcyjny lub podłączenie do sieci miejskiej SEC.
+                </p>
+                <div class="p-3 bg-amber-50 rounded-xl text-[11px] text-amber-900 border border-amber-200">
+                    <strong>Algorytm:</strong> Oferty z piecami kaflowymi otrzymują <strong>+12 punktów bonusowych do Deal Score</strong> oraz automatyczną wycenę instalacji nowego węzła grzewczego.
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-stone-100 text-stone-850 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-stone-900">Walk-Away Price i Kotwica Negocjacyjna</h4>
+                        <span class="text-[11px] text-stone-500">Narzędzie do rozmów ze sprzedającym</span>
+                    </div>
+                </div>
+                <p class="text-xs text-stone-600 leading-relaxed">
+                    Każda wygenerowana karta oferty podaje dwie kluczowe kwoty negocjacyjne:
+                </p>
+                <ul class="text-xs text-stone-600 space-y-1.5 list-disc list-inside">
+                    <li><strong>Walk-Away Price:</strong> Maksymalna cena ofertowa, powyżej której spółka odchodzi od stołu, ponieważ zwrot z inwestycji spadłby poniżej 16.0%.</li>
+                    <li><strong>Kotwica (Anchor Price):</strong> Sugerowana pierwsza oferta otwarcia negocjacji (zazwyczaj 12–15% poniżej ceny ofertowej), pozwalająca uzyskać przestrzeń do kompromisu.</li>
+                </ul>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-stone-900">Synchronizacja z Master Trackerem</h4>
+                        <span class="text-[11px] text-stone-500">Zamknięty obieg operacyjny</span>
+                    </div>
+                </div>
+                <p class="text-xs text-stone-600 leading-relaxed">
+                    Po kliknięciu przycisku <em>„Wyślij do Master Trackera”</em> oferta trafia ze statusem <code>STAGING</code> bezpośrednio do centralnego systemu spółki. Zachowane zostają linki źródłowe, wyliczenia remontowe, założone ceny wyjścia oraz notatki ze scoutingu. W przypadku oferty z bramką STOP system wymaga potwierdzenia wymuszenia zapisu.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SEKCJA 2: DOSSIER 11 ŹRÓDEŁ OGŁOSZEŃ -->
+    <div x-show="activeSection === 'sources'" x-transition.duration.200ms class="space-y-6" style="display: none;">
+        
+        <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs">
+            <h3 class="font-serif text-xl font-bold text-stone-950 mb-1">Przegląd 11 zintegrowanych kanałów sourcingowych</h3>
+            <p class="text-xs sm:text-sm text-stone-600 leading-relaxed">
+                Nesta Deal Hunter agreguje ogłoszenia z trzech komplementarnych filarów: komercyjnych portali ogólnopolskich, lokalnych portali regionalnych oraz segmentu pozarynkowego i instytucjonalnego (licytacje komornicze, przetargi ZBiLK, spółdzielnie).
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- 1. Otodom -->
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-stone-900 text-sand-50 font-bold text-sm flex items-center justify-center">
+                            OTO
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base text-stone-950">Otodom.pl</h4>
+                            <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">Główny portal komercyjny</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold text-stone-400">Komercyjne</span>
+                </div>
+
+                <div class="space-y-2 text-xs text-stone-600">
+                    <p><strong>Charakter źródła:</strong> Największy i najbardziej sformalizowany portal nieruchomości w Polsce. Bardzo duży ruch, kompletne metadane techniczne, profesjonalne galerie zdjęć.</p>
+                    <p><strong>Kto wystawia oferty:</strong> W 85&ndash;90% biura pośrednictwa i agencje nieruchomości. Oferty prywatne stanowią mniejszość i szybko znikają.</p>
+                    <p><strong>Typowe ogłoszenia:</strong> Pełen przekrój rynku wtórnego. Ceny ofertowe są zazwyczaj zawyżone o prowizję pośrednika (2&ndash;3%) oraz oczekiwania sprzedających.</p>
+                    <div class="p-3 bg-sand-50 rounded-xl border border-sand-200 text-[11px] text-stone-700">
+                        <strong>Strategia Nesta Home:</strong> Szukamy świeżych ofert <em>„do generalnego remontu”</em> lub <em>„dla inwestora”</em> dodanych w ciągu ostatnich 12 godzin. Kluczowa jest szybkość kontaktu przed innymi flipperami.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. OLX Szczecin -->
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-teal-800 text-white font-bold text-sm flex items-center justify-center">
+                            OLX
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base text-stone-950">OLX Szczecin</h4>
+                            <span class="text-[11px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">Portal ogłoszeń drobnych</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold text-stone-400">Drobne & Masowe</span>
+                </div>
+
+                <div class="space-y-2 text-xs text-stone-600">
+                    <p><strong>Charakter źródła:</strong> Najpopularniejsza platforma ogłoszeń w Polsce o bardzo dużej rotacji. Uboższe opisy techniczne, ale największa szansa na bezpośredni kontakt ze sprzedającym.</p>
+                    <p><strong>Kto wystawia oferty:</strong> Właściciele prywatni (sprzedaż bezpośrednia, spadki, pilne sytuacje życiowe) oraz agenci szukający szybkich leadów.</p>
+                    <p><strong>Typowe ogłoszenia:</strong> Mieszkania do opróżnienia i remontu, kawalerki, lokale po osobach starszych, mieszkania zadłużone.</p>
+                    <div class="p-3 bg-sand-50 rounded-xl border border-sand-200 text-[11px] text-stone-700">
+                        <strong>Strategia Nesta Home:</strong> Najważniejsze źródło okazji bezpośrednich. Brak prowizji agencji daje natychmiastową przewagę 10&ndash;20 tys. zł na starcie.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. infoludek.pl -->
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-700 text-white font-bold text-sm flex items-center justify-center">
+                            INF
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base text-stone-950">infoludek.pl</h4>
+                            <span class="text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">Lokalny portal regionalny</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold text-stone-400">Szczecin Regionalny</span>
+                </div>
+
+                <div class="space-y-2 text-xs text-stone-600">
+                    <p><strong>Charakter źródła:</strong> Historyczny, lokalny szczeciński serwis ogłoszeniowy istniejący od lat 90. Prosty, surowy format ogłoszeń tekstowych bez rozbudowanych filtrów.</p>
+                    <p><strong>Kto wystawia oferty:</strong> Przede wszystkim wieloletni mieszkańcy Szczecina, osoby starsze niekorzystające z nowoczesnych aplikacji mobilnych ani Otodomu.</p>
+                    <p><strong>Typowe ogłoszenia:</strong> Lokale w tradycyjnych kamienicach w Śródmieściu, Turzynie i Niebuszewie, często z piecami kaflowymi i archaicznym wystrojem.</p>
+                    <div class="p-3 bg-sand-50 rounded-xl border border-sand-200 text-[11px] text-stone-700">
+                        <strong>Strategia Nesta Home:</strong> Prawdziwa kopalnia okazji off-market. Znikoma konkurencja ze strony ogólnopolskich funduszy. Często możliwość zakupu znacznie poniżej wartości rynkowej.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. E-Licytacje komornicze -->
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-rose-900 text-sand-50 font-bold text-sm flex items-center justify-center">
+                            KOM
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base text-stone-950">E-Licytacje komornicze</h4>
+                            <span class="text-[11px] font-semibold text-rose-800 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">Krajowa Rada Komornicza</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold text-stone-400">Egzekucje Sądowe</span>
+                </div>
+
+                <div class="space-y-2 text-xs text-stone-600">
+                    <p><strong>Charakter źródła:</strong> Oficjalny portal licytacji sądowych prowadzonych przez komorników przy Sądzie Rejonowym Szczecin-Centrum i Szczecin-Prawobrzeże.</p>
+                    <p><strong>Kto wystawia oferty:</strong> Kancelarie komornicze realizujące sądowe tytuły wykonawcze.</p>
+                    <p><strong>Typowe ogłoszenia:</strong> Nieruchomości zajęte za długi. Cena wywołania na I licytacji to <strong>3/4</strong> sumy oszacowania, a na II licytacji zaledwie <strong>2/3</strong> sumy oszacowania rzeczoznawcy.</p>
+                    <div class="p-3 bg-sand-50 rounded-xl border border-sand-200 text-[11px] text-stone-700">
+                        <strong>Strategia Nesta Home:</strong> Dyskonty rzędu 25&ndash;35% poniżej rynku. Wymaga wniesienia wadium (10%) oraz bezwzględnej weryfikacji księgi wieczystej pod kątem lokatorów i służebności.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. ZBiLK Szczecin -->
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-900 text-sand-50 font-bold text-sm flex items-center justify-center">
+                            ZBK
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base text-stone-950">ZBiLK Szczecin (Miejskie)</h4>
+                            <span class="text-[11px] font-semibold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">Zasób Gminy Miasto Szczecin</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold text-stone-400">Przetargi Miejskie</span>
+                </div>
+
+                <div class="space-y-2 text-xs text-stone-600">
+                    <p><strong>Charakter źródła:</strong> Zarząd Budynków i Lokali Komunalnych w Szczecinie. Oficjalne publiczne przetargi ustne nieograniczone na sprzedaż lokali mieszkalnych.</p>
+                    <p><strong>Kto wystawia oferty:</strong> Wydział Mieszkalnictwa Urzędu Miasta Szczecin.</p>
+                    <p><strong>Typowe ogłoszenia:</strong> Pustostany w kamienicach komunalnych (Śródmieście, Turzyn, Niebuszewo, Drzetowo) przeznaczone do kapitalnego remontu. Czysty stan prawny bez obciążeń hipotecznych.</p>
+                    <div class="p-3 bg-sand-50 rounded-xl border border-sand-200 text-[11px] text-stone-700">
+                        <strong>Strategia Nesta Home:</strong> Znakomity segment pod rewitalizację kamieniczą. Większość lokali wymaga wymiany pieców kaflowych, co idealnie wpisuje się w profil wykonawczy Nesta Home.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Spółdzielnie Mieszkaniowe -->
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-800 text-sand-50 font-bold text-sm flex items-center justify-center">
+                            SPM
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base text-stone-950">Szczecińskie Spółdzielnie</h4>
+                            <span class="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">Przetargi ofertowe spółdzielcze</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold text-stone-400">Spółdzielnie Mieszkaniowe</span>
+                </div>
+
+                <div class="space-y-2 text-xs text-stone-600">
+                    <p><strong>Charakter źródła:</strong> Przetargi organizowane przez największe szczecińskie spółdzielnie: <strong>SM Śródmieście</strong>, <strong>SM Dąb</strong> oraz <strong>SM Wspólny Dom</strong>.</p>
+                    <p><strong>Kto wystawia oferty:</strong> Działy członkowsko-lokalowe zarządów spółdzielni mieszkaniowych.</p>
+                    <p><strong>Typowe ogłoszenia:</strong> Lokale z odzyskanego mienia (zgon bezspadkowy, eksmisje za zaległości czynszowe, wygaśnięcie członkostwa). Układy 1&ndash;3 pokojowe w blokach i kamienicach.</p>
+                    <div class="p-3 bg-sand-50 rounded-xl border border-sand-200 text-[11px] text-stone-700">
+                        <strong>Strategia Nesta Home:</strong> Przetargi ofertowe (często kopertowe). Atrakcyjne ceny wywoławcze i uregulowany status spółdzielczego własnościowego prawa do lokalu.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. Sprzedajemy.pl -->
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-orange-700 text-white font-bold text-sm flex items-center justify-center">
+                            SPR
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base text-stone-950">Sprzedajemy.pl</h4>
+                            <span class="text-[11px] font-semibold text-orange-800 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200">Ogólnopolski portal bezpłatny</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold text-stone-400">Drobne</span>
+                </div>
+
+                <div class="space-y-2 text-xs text-stone-600">
+                    <p><strong>Charakter źródła:</strong> Darmowy serwis ogłoszeniowy konkurujący z OLX. Mniejszy ruch, ale dzięki brakowi opłat za wystawienie przyciąga sprzedawców indywidualnych.</p>
+                    <p><strong>Kto wystawia oferty:</strong> Osoby prywatne niechętne płaceniu za pakiety ogłoszeniowe oraz lokalni pośrednicy.</p>
+                    <p><strong>Typowe ogłoszenia:</strong> Mieszkania z rynku wtórnego, często z potencjałem negocjacyjnym, wystawiane w oczekiwaniu na bezpośredniego kupca.</p>
+                    <div class="p-3 bg-sand-50 rounded-xl border border-sand-200 text-[11px] text-stone-700">
+                        <strong>Strategia Nesta Home:</strong> Regularny monitoring pozwala wyłapać oferty osób, które nie wystawiają się na drogim Otodomie.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. Gratka.pl -->
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-900 text-white font-bold text-sm flex items-center justify-center">
+                            GRA
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base text-stone-950">Gratka.pl</h4>
+                            <span class="text-[11px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">Portal wtórny z tradycją</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold text-stone-400">Komercyjne</span>
+                </div>
+
+                <div class="space-y-2 text-xs text-stone-600">
+                    <p><strong>Charakter źródła:</strong> Jeden z najstarszych polskich portali ogłoszeniowych (grupa Ringier Axel Springer / Polska Press). Zintegrowany z prasą regionalną.</p>
+                    <p><strong>Kto wystawia oferty:</strong> Agencje obrotu nieruchomościami oraz starsi właściciele mieszkań.</p>
+                    <p><strong>Typowe ogłoszenia:</strong> Standardowe lokale z rynku wtórnego, mieszkania spółdzielcze i komunalne.</p>
+                    <div class="p-3 bg-sand-50 rounded-xl border border-sand-200 text-[11px] text-stone-700">
+                        <strong>Strategia Nesta Home:</strong> Uzupełnienie monitoringu Otodomu i OLX. Czasami trafiają się oferty wygaszone na Otodomie, a wciąż wiszące na Gratce z rabatem.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9. Lento.pl Szczecin -->
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-stone-700 text-white font-bold text-sm flex items-center justify-center">
+                            LEN
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base text-stone-950">Lento.pl Szczecin</h4>
+                            <span class="text-[11px] font-semibold text-stone-700 bg-sand-100 px-2 py-0.5 rounded-md border border-sand-300">Regionalne drobne</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold text-stone-400">Drobne</span>
+                </div>
+
+                <div class="space-y-2 text-xs text-stone-600">
+                    <p><strong>Charakter źródła:</strong> Uzupełniający ogólnopolski portal ogłoszeń drobnych z aktywnym działem szczecińskim.</p>
+                    <p><strong>Kto wystawia oferty:</strong> Właściciele mieszkań, drobni flipperzy oraz mniejsze biura nieruchomości.</p>
+                    <p><strong>Typowe ogłoszenia:</strong> Szybkie ogłoszenia bezpośrednie, mieszkania do remontu, sprzedaże pilne.</p>
+                    <div class="p-3 bg-sand-50 rounded-xl border border-sand-200 text-[11px] text-stone-700">
+                        <strong>Strategia Nesta Home:</strong> Dodatkowy radar na ogłoszenia niepublikowane w głównych mediach komercyjnych.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10. 24Kurier.pl -->
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-red-800 text-white font-bold text-sm flex items-center justify-center">
+                            24K
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base text-stone-950">24Kurier.pl (Drobne)</h4>
+                            <span class="text-[11px] font-semibold text-red-800 bg-red-50 px-2 py-0.5 rounded-md border border-red-200">Prasa tradycyjna Szczecina</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold text-stone-400">Prasa Drukowana</span>
+                </div>
+
+                <div class="space-y-2 text-xs text-stone-600">
+                    <p><strong>Charakter źródła:</strong> Internetowa rubryka ogłoszeń drobnych „Kuriera Szczecińskiego” – najstarszego dziennika Pomorza Zachodniego.</p>
+                    <p><strong>Kto wystawia oferty:</strong> Tradycyjni mieszkańcy Szczecina, emeryci, osoby nadające ogłoszenia bezpośrednio w biurze prasowym dziennika.</p>
+                    <p><strong>Typowe ogłoszenia:</strong> Krótkie anonse w stylu <em>„Sprzedam 2 pokoje w kamienicy, pilne, tel...”</em> bez zdjęć.</p>
+                    <div class="p-3 bg-sand-50 rounded-xl border border-sand-200 text-[11px] text-stone-700">
+                        <strong>Strategia Nesta Home:</strong> Całkowity brak konkurencji ze strony agencji posługujących się wyłącznie botami na Otodomie. Często najlepszy stosunek ceny do metrażu.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 11. Szybka wklejka -->
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs space-y-4 md:col-span-2">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-stone-950 text-sand-50 font-bold text-sm flex items-center justify-center">
+                            MAN
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base text-stone-950">Szybka wklejka (Manual & Off-Market Scout)</h4>
+                            <span class="text-[11px] font-semibold text-stone-900 bg-sand-200 px-2 py-0.5 rounded-md border border-sand-300">Własny kanał operacyjny</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold text-stone-400">Off-Market / Social</span>
+                </div>
+
+                <div class="space-y-2 text-xs text-stone-600">
+                    <p><strong>Charakter źródła:</strong> Dedykowany moduł błyskawicznego wprowadzania ofert z zewnętrznych, zamkniętych kanałów: grup na Facebooku, konwersacji na Messengerze, wiadomości WhatsApp od agentów terenowych czy zrzutów ekranu ze smartfona.</p>
+                    <p><strong>Obsługiwane formaty:</strong> Wyłącznie pojedynczy link do oferty, print screen (zrzut ekranu przez <code>Ctrl+V</code>) lub surowy tekst wiadomości. Zero dodatkowych pól formularza.</p>
+                    <div class="p-3 bg-sand-100 rounded-xl border border-sand-300 text-[11px] text-stone-800">
+                        <strong>Strategia Nesta Home:</strong> Natychmiastowa weryfikacja opłacalności dowolnej „perełki” przesłanej przez znajomego agenta lub znalezionej w zamkniętej grupie FB, zanim oferta trafi na otwarty rynek.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SEKCJA 3: WSKAŹNIKI FINANSOWE I REGUŁY -->
+    <div x-show="activeSection === 'metrics'" x-transition.duration.200ms class="space-y-6" style="display: none;">
+        
+        <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs">
+            <h3 class="font-serif text-xl font-bold text-stone-950 mb-1">Standard Finansowy Nesta Home v4.16</h3>
+            <p class="text-xs sm:text-sm text-stone-600 leading-relaxed">
+                Każda kalkulacja opiera się na twardej matematyce inwestycyjnej, eliminując emocje z procesu decyzyjnego. Poniżej znajduje się zestawienie kluczowych parametrów i progów kwalifikacyjnych.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <div class="bg-white p-5 rounded-2xl border border-emerald-200 shadow-xs space-y-3">
+                <div class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Twarda Bramka 1</div>
+                <h4 class="text-lg font-bold text-stone-950">Decyzja: DZWONIMY</h4>
+                <p class="text-xs text-stone-600 leading-relaxed">
+                    Oferta kwalifikuje się do natychmiastowego kontaktu telefonicznego ze sprzedającym tylko wtedy, gdy spełnia <strong>obydwa</strong> warunki:
+                </p>
+                <div class="space-y-1.5 pt-1 text-xs font-semibold text-emerald-900">
+                    <div class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-600"></i> Prognozowany zwrot ROI &ge; 16.0%</div>
+                    <div class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-600"></i> Czysty zysk netto spółki &ge; 30 000 zł</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-sand-300 shadow-xs space-y-3">
+                <div class="text-xs font-bold text-stone-600 uppercase tracking-wider">Kosztorys Remontowy</div>
+                <h4 class="text-lg font-bold text-stone-950">Stawki wykonawcze Nesta</h4>
+                <p class="text-xs text-stone-600 leading-relaxed">
+                    Uśrednione koszty doprowadzenia lokalu do standardu pod klucz wypracowane przez Kierownika Budowy:
+                </p>
+                <div class="space-y-1.5 pt-1 text-xs text-stone-800 font-medium">
+                    <div class="flex justify-between border-b border-sand-200 pb-1"><span>Kamienica:</span><strong>1 900 zł/m²</strong></div>
+                    <div class="flex justify-between border-b border-sand-200 pb-1"><span>Wielka płyta:</span><strong>1 700 zł/m²</strong></div>
+                    <div class="flex justify-between border-b border-sand-200 pb-1"><span>Niski blok:</span><strong>1 700 zł/m²</strong></div>
+                    <div class="flex justify-between"><span>Nowe budownictwo:</span><strong>1 500 zł/m²</strong></div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-sand-300 shadow-xs space-y-3">
+                <div class="text-xs font-bold text-stone-600 uppercase tracking-wider">Profil Wolumenu</div>
+                <h4 class="text-lg font-bold text-stone-950">Sweet Spot Nesta Home</h4>
+                <p class="text-xs text-stone-600 leading-relaxed">
+                    Preferowany przedział powierzchniowy gwarantujący najszybszą sprzedaż po remoncie (płynność rynkowa):
+                </p>
+                <div class="space-y-1.5 pt-1 text-xs text-stone-800 font-medium">
+                    <div class="flex justify-between border-b border-sand-200 pb-1"><span>Główny sweet spot:</span><strong>38 &ndash; 55 m² (2-3 pokoje)</strong></div>
+                    <div class="flex justify-between border-b border-sand-200 pb-1"><span>Segment szybki obrót:</span><strong>25 &ndash; 35 m² (kawalerki)</strong></div>
+                    <div class="flex justify-between text-stone-500"><span>Powyżej 70 m²:</span><span>Wymagany rabat &gt; 25%</span></div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

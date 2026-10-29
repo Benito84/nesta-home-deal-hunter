@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Kalibracja i złote zasady | Nesta Home Deal Hunter{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Benchmarkowy Ciemny Nagłówek Ekranu (Sekcja 2.3) -->
+    <div class="bg-stone-950 text-sand-100 rounded-2xl p-6 sm:p-8 shadow-xs border border-stone-850 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+            <div class="text-[10px] uppercase font-bold tracking-widest text-sand-400">Kalibracja / Active learning</div>
+            <h2 class="font-serif text-2xl font-bold tracking-tight text-sand-50 mt-1">Matryca stawek i złote zasady</h2>
+            <p class="text-stone-400 text-xs sm:text-sm mt-1 max-w-3xl leading-relaxed">
+                Zarządzaj benchmarkami cenowymi ARV dla dzielnic Szczecina oraz definiuj reguły inwestycyjne wstrzykiwane bezpośrednio do promptów silnika AI.
+            </p>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+            <a href="/" class="bg-sand-100 hover:bg-sand-200 text-stone-950 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-xs flex items-center">
+                <i class="fa-solid fa-arrow-left mr-2"></i>Wróć do feedu
+            </a>
+        </div>
+    </div>
+
+    <!-- Section 1: District Rates -->
+    <div>
+        <div class="mb-4">
+            <h3 class="text-xl font-serif font-bold text-stone-950">Matryca cenowa Szczecina (ARV i stan do remontu)</h3>
+            <p class="text-xs text-stone-600 mt-1">
+                Stawki rynkowe wykorzystywane przez kalkulator Nesta Home do wyliczania ARV, zysku netto i ceny walk-away.
+            </p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-sand-300 shadow-xs overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-sand-50 border-b border-sand-300 text-[11px] uppercase text-stone-600 font-bold tracking-wider">
+                    <tr>
+                        <th class="px-6 py-3.5">Dzielnica</th>
+                        <th class="px-6 py-3.5">Śr. do remontu (zł/m²)</th>
+                        <th class="px-6 py-3.5">ARV min (szybki obrót)</th>
+                        <th class="px-6 py-3.5">ARV średnie (zrównoważone)</th>
+                        <th class="px-6 py-3.5">ARV maks (premium)</th>
+                        <th class="px-6 py-3.5 text-right">Akcja</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-sand-200">
+                    {% for bm in benchmarks %}
+                    <tr class="hover:bg-sand-50/60 transition">
+                        <form method="POST" action="/benchmarks/update-rate">
+                            <input type="hidden" name="district_id" value="{{ bm.id }}">
+                            <td class="px-6 py-4 font-bold text-stone-950">
+                                {{ bm.district }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <input type="number" step="100" name="avg_renovation_m2" value="{{ bm.avg_renovation_m2 }}" class="w-28 text-xs bg-sand-50 border border-sand-300 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-stone-950">
+                            </td>
+                            <td class="px-6 py-4">
+                                <input type="number" step="100" name="ready_min_m2" value="{{ bm.ready_min_m2 }}" class="w-28 text-xs bg-sand-50 border border-sand-300 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-stone-950">
+                            </td>
+                            <td class="px-6 py-4">
+                                <input type="number" step="100" name="ready_avg_m2" value="{{ bm.ready_avg_m2 }}" class="w-28 text-xs bg-sand-50 border border-sand-300 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-stone-950">
+                            </td>
+                            <td class="px-6 py-4">
+                                <input type="number" step="100" name="ready_max_m2" value="{{ bm.ready_max_m2 }}" class="w-28 text-xs bg-sand-50 border border-sand-300 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-stone-950">
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button type="submit" class="px-3.5 py-1.5 bg-stone-950 hover:bg-stone-850 text-sand-50 rounded-xl text-xs font-bold transition shadow-xs">
+                                    Zapisz
+                                </button>
+                            </td>
+                        </form>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 2: Golden Rules (AI Context Injection) -->
+    <div>
+        <div class="mb-4">
+            <h3 class="text-xl font-serif font-bold text-stone-950">Złote zasady inwestycyjne (Few-Shot AI Memory)</h3>
+            <p class="text-xs text-stone-600 mt-1">
+                Reguły automatycznie wstrzykiwane do promptu Google Gemini przy każdej analizie. Model uczy się Waszych nawyków i preferencji.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- New Rule Form -->
+            <div class="bg-white p-6 rounded-2xl border border-sand-300 shadow-xs">
+                <h4 class="text-xs font-bold text-stone-950 uppercase tracking-wider mb-4">Nowa zasada inwestycyjna</h4>
+                <form method="POST" action="/benchmarks/add-rule" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-700 mb-1">Treść zasady</label>
+                        <textarea name="rule_text" required rows="3" placeholder="np. 'W kamienicach na Turzynie unikamy parterów wychodzących na podwórze z kontenerami śmietnikowymi.'" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl p-3 focus:ring-2 focus:ring-stone-950 focus:outline-none"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-stone-700 mb-1">Kategoria</label>
+                            <select name="category" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl p-2.5 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                                <option value="heating">Ogrzewanie</option>
+                                <option value="layout">Układ i pokoje</option>
+                                <option value="location">Lokalizacja</option>
+                                <option value="floor">Piętro i winda</option>
+                                <option value="general">Ogólne</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-stone-700 mb-1">Waga (Priorytet)</label>
+                            <input type="number" step="0.1" name="weight" value="1.2" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl p-2.5 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-2.5 bg-stone-950 hover:bg-stone-850 text-sand-50 rounded-xl text-xs font-bold transition shadow-xs">
+                        Zapisz złotą zasadę
+                    </button>
+                </form>
+            </div>
+
+            <!-- List of Rules -->
+            <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-sand-300 shadow-xs">
+                <h4 class="text-xs font-bold text-stone-950 uppercase tracking-wider mb-4">Aktywne zasady ({{ rules|length }})</h4>
+                <div class="space-y-3">
+                    {% for r in rules %}
+                    <div class="p-3.5 rounded-xl bg-sand-50 border border-sand-200 flex items-start justify-between">
+                        <div>
+                            <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-sand-200 text-stone-800 mb-1">
+                                {{ r.category }}
+                            </span>
+                            <p class="text-xs text-stone-800 font-medium leading-relaxed">{{ r.rule_text }}</p>
+                        </div>
+                        <span class="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 ml-4 shrink-0">
+                            Waga {{ r.weight }}x
+                        </span>
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-stone-400">Brak zdefiniowanych zasad.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: Feedback Loop History -->
+    <div>
+        <div class="mb-4">
+            <h3 class="text-xl font-serif font-bold text-stone-950">Historia decyzji zespołu (Active Learning)</h3>
+            <p class="text-xs text-stone-600 mt-1">
+                Zapis decyzji podejmowanych na tablicy okazji (Oględziny / Odrzucenia z uzasadnieniem).
+            </p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-sand-300 shadow-xs divide-y divide-sand-200">
+            {% for fb in feedback %}
+            <div class="p-4 flex items-center justify-between text-xs">
+                <div class="flex items-center space-x-3">
+                    {% if fb.decision == 'INTERESTED' or fb.decision == 'QUALIFIED' %}
+                    <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">
+                        <i class="fa-solid fa-check mr-1 text-emerald-600"></i>Oględziny
+                    </span>
+                    {% else %}
+                    <span class="px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 font-bold border border-rose-200">
+                        <i class="fa-solid fa-xmark mr-1 text-rose-600"></i>Odrzucono
+                    </span>
+                    {% endif %}
+                    <span class="font-medium text-stone-900">Oferta #{{ fb.listing_id }}</span>
+                    {% if fb.comment %}
+                    <span class="text-stone-500 italic">"{{ fb.comment }}"</span>
+                    {% endif %}
+                </div>
+                <span class="text-stone-400">{{ fb.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+            </div>
+            {% else %}
+            <div class="p-6 text-center text-xs text-stone-400">
+                Brak zarejestrowanych decyzji w pętli feedbacku.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+
+{% block title %}Tablica Okazji | Nesta Home Deal Hunter{% endblock %}
+
+{% block content %}
+<div x-data="dealFeed()">
+
+    <!-- Benchmarkowy Ciemny Nagłówek Ekranu (Sekcja 2.3) -->
+    <div class="bg-stone-950 text-sand-100 rounded-2xl p-6 sm:p-8 shadow-xs border border-stone-850 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
+        <div>
+            <div class="text-[10px] uppercase font-bold tracking-widest text-sand-400">Obszar operacyjny / Sourcing</div>
+            <h2 class="font-serif text-2xl font-bold tracking-tight text-sand-50 mt-1">Pulpit okazji inwestycyjnych</h2>
+            <p class="text-stone-400 text-xs sm:text-sm mt-1 max-w-3xl leading-relaxed">
+                Autonomiczny kombajn selekcji mieszkań z rynku wtórnego w Szczecinie. Twarda bramka kwalifikacyjna: minimalny zwrot z kapitału ROI &ge; 16.0% oraz czysty zysk spółki &ge; 30 000 zł.
+            </p>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+            <a href="/sources" class="bg-sand-100 hover:bg-sand-200 text-stone-950 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-xs flex items-center">
+                <i class="fa-solid fa-arrows-rotate mr-2"></i>Status scraperów
+            </a>
+        </div>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-5 rounded-2xl border border-sand-300 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Wszystkie w bazie</p>
+                <h3 class="text-2xl font-bold text-stone-950 mt-1">{{ all_count }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-sand-100 flex items-center justify-center text-stone-700">
+                <i class="fa-solid fa-list-check text-lg"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-emerald-200 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Bramka 1: DZWONIMY</p>
+                <h3 class="text-2xl font-bold text-emerald-800 mt-1">{{ gate_call_count }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                <i class="fa-solid fa-phone-volume text-lg"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-amber-700 uppercase tracking-wider">Średni ROI ofert</p>
+                <h3 class="text-2xl font-bold text-amber-800 mt-1">{{ "%.1f"|format(avg_roi) }}%</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                <i class="fa-solid fa-chart-line text-lg"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-sand-300 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-stone-600 uppercase tracking-wider">Przesłane do Trackera</p>
+                <h3 class="text-2xl font-bold text-stone-900 mt-1">{{ synced_count }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-sand-100 flex items-center justify-center text-stone-700">
+                <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Search Bar (Nesta Architectural Standard) -->
+    <div class="bg-white p-5 rounded-2xl border border-sand-300 shadow-xs mb-6">
+        <form method="GET" action="/" id="filterForm">
+            <!-- Górny pasek: Podstawowe filtry i wyszukiwanie -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                <!-- Wyszukiwarka tekstowa -->
+                <div class="md:col-span-4">
+                    <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Wyszukaj ogłoszenie</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-stone-400 text-xs"></i>
+                        <input type="text" name="q" value="{{ q }}" placeholder="Ulica, słowo kluczowe, treść..." class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl pl-9 pr-3 py-2 text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Źródło -->
+                <div class="md:col-span-2">
+                    <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Źródło</label>
+                    <select name="source" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl px-3 py-2 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                        {% for src in available_sources %}
+                        <option value="{{ src.code }}" {% if source == src.code %}selected{% endif %}>{{ src.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Dzielnica -->
+                <div class="md:col-span-2">
+                    <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Dzielnica</label>
+                    <select name="district" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl px-3 py-2 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                        <option value="ALL" {% if district == 'ALL' %}selected{% endif %}>Wszystkie dzielnice</option>
+                        <option value="Śródmieście" {% if district == 'Śródmieście' %}selected{% endif %}>Śródmieście</option>
+                        <option value="Centrum" {% if district == 'Centrum' %}selected{% endif %}>Centrum</option>
+                        <option value="Pogodno" {% if district == 'Pogodno' %}selected{% endif %}>Pogodno</option>
+                        <option value="Niebuszewo" {% if district == 'Niebuszewo' %}selected{% endif %}>Niebuszewo</option>
+                        <option value="Turzyn" {% if district == 'Turzyn' %}selected{% endif %}>Turzyn</option>
+                        <option value="Pomorzany" {% if district == 'Pomorzany' %}selected{% endif %}>Pomorzany</option>
+                        <option value="Gumieńce" {% if district == 'Gumieńce' %}selected{% endif %}>Gumieńce</option>
+                        <option value="Warszewo" {% if district == 'Warszewo' %}selected{% endif %}>Warszewo</option>
+                        <option value="Drzetowo-Grabowo" {% if district == 'Drzetowo-Grabowo' %}selected{% endif %}>Drzetowo-Grabowo</option>
+                        <option value="Dąbie" {% if district == 'Dąbie' %}selected{% endif %}>Dąbie</option>
+                        <option value="Prawobrzeże" {% if district == 'Prawobrzeże' %}selected{% endif %}>Prawobrzeże</option>
+                    </select>
+                </div>
+
+                <!-- Decyzja bramki -->
+                <div class="md:col-span-2">
+                    <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Bramka 1</label>
+                    <select name="gate" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl px-3 py-2 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                        <option value="ALL" {% if gate == 'ALL' %}selected{% endif %}>Wszystkie</option>
+                        <option value="DZWONIMY" {% if gate == 'DZWONIMY' %}selected{% endif %}>Tylko DZWONIMY</option>
+                        <option value="STOP" {% if gate == 'STOP' %}selected{% endif %}>Tylko STOP</option>
+                    </select>
+                </div>
+
+                <!-- Przyciski akcji -->
+                <div class="md:col-span-2 flex items-center gap-2">
+                    <button type="submit" class="flex-1 bg-stone-950 hover:bg-stone-850 text-sand-50 text-xs font-bold py-2 px-3 rounded-xl transition shadow-xs flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-filter"></i>
+                        <span>Filtruj</span>
+                    </button>
+                    <button type="button" @click="showAdvanced = !showAdvanced" class="bg-sand-100 hover:bg-sand-200 text-stone-850 text-xs font-bold py-2 px-3 rounded-xl transition border border-sand-300 flex items-center gap-1.5" title="Rozwiń filtry zaawansowane">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span class="hidden xl:inline">Więcej</span>
+                        {% if active_filters_count > 0 %}
+                        <span class="bg-amber-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center font-bold">{{ active_filters_count }}</span>
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel Zaawansowanych Filtrów (Rozwijany) -->
+            <div x-show="showAdvanced" x-transition.duration.200ms class="mt-4 pt-4 border-t border-sand-200" style="display: none;">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Cena od / do -->
+                    <div>
+                        <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Cena zakupu (PLN)</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" step="5000" name="price_min" value="{{ price_min if price_min is not none else '' }}" placeholder="Od (PLN)" class="text-xs bg-sand-50 border border-sand-300 rounded-xl px-2.5 py-1.5 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                            <input type="number" step="5000" name="price_max" value="{{ price_max if price_max is not none else '' }}" placeholder="Do (PLN)" class="text-xs bg-sand-50 border border-sand-300 rounded-xl px-2.5 py-1.5 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Metraż od / do -->
+                    <div>
+                        <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Metraż (m²)</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" step="1" name="area_min" value="{{ area_min if area_min is not none else '' }}" placeholder="Od (m²)" class="text-xs bg-sand-50 border border-sand-300 rounded-xl px-2.5 py-1.5 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                            <input type="number" step="1" name="area_max" value="{{ area_max if area_max is not none else '' }}" placeholder="Do (m²)" class="text-xs bg-sand-50 border border-sand-300 rounded-xl px-2.5 py-1.5 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Liczba pokoi -->
+                    <div>
+                        <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Liczba pokoi</label>
+                        <select name="rooms" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl px-3 py-1.5 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                            <option value="ALL" {% if rooms == 'ALL' %}selected{% endif %}>Dowolna liczba pokoi</option>
+                            <option value="1" {% if rooms == '1' %}selected{% endif %}>1 pokój (kawalerka)</option>
+                            <option value="2" {% if rooms == '2' %}selected{% endif %}>2 pokoje</option>
+                            <option value="3" {% if rooms == '3' %}selected{% endif %}>3 pokoje</option>
+                            <option value="4+" {% if rooms == '4+' %}selected{% endif %}>4 i więcej pokoi</option>
+                        </select>
+                    </div>
+
+                    <!-- Typ budynku -->
+                    <div>
+                        <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Typ budynku</label>
+                        <select name="building_type" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl px-3 py-1.5 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                            <option value="ALL" {% if building_type == 'ALL' %}selected{% endif %}>Wszystkie typy</option>
+                            <option value="Kamienica" {% if building_type == 'Kamienica' %}selected{% endif %}>Kamienica</option>
+                            <option value="Wielka płyta" {% if building_type == 'Wielka płyta' %}selected{% endif %}>Wielka płyta</option>
+                            <option value="Niski blok" {% if building_type == 'Niski blok' %}selected{% endif %}>Niski blok</option>
+                            <option value="Apartamentowiec" {% if building_type == 'Apartamentowiec' %}selected{% endif %}>Apartamentowiec</option>
+                        </select>
+                    </div>
+
+                    <!-- Typ ogrzewania -->
+                    <div>
+                        <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Ogrzewanie</label>
+                        <select name="heating" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl px-3 py-1.5 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                            <option value="ALL" {% if heating == 'ALL' %}selected{% endif %}>Wszystkie typy ogrzewania</option>
+                            <option value="miejskie" {% if heating == 'miejskie' %}selected{% endif %}>Miejskie (SEC)</option>
+                            <option value="gazowe" {% if heating == 'gazowe' %}selected{% endif %}>Gazowe</option>
+                            <option value="piece" {% if heating == 'piece' %}selected{% endif %}>Piece kaflowe (do konwersji)</option>
+                            <option value="elektryczne" {% if heating == 'elektryczne' %}selected{% endif %}>Elektryczne</option>
+                        </select>
+                    </div>
+
+                    <!-- Minimalny prognozowany ROI (%) -->
+                    <div>
+                        <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Minimalny ROI</label>
+                        <select name="min_roi" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl px-3 py-1.5 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                            <option value="" {% if not min_roi %}selected{% endif %}>Dowolny poziom zwrotu</option>
+                            <option value="16" {% if min_roi == 16 or min_roi == 0.16 %}selected{% endif %}>Min. 16.0% (Bramka Nesta)</option>
+                            <option value="20" {% if min_roi == 20 or min_roi == 0.20 %}selected{% endif %}>Min. 20.0% (Wysoka stopa)</option>
+                            <option value="25" {% if min_roi == 25 or min_roi == 0.25 %}selected{% endif %}>Min. 25.0% (Okazja strategiczna)</option>
+                        </select>
+                    </div>
+
+                    <!-- Porządek sortowania -->
+                    <div>
+                        <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Sortowanie</label>
+                        <select name="sort" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl px-3 py-1.5 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                            <option value="score" {% if sort == 'score' %}selected{% endif %}>Najwyższy Deal Score</option>
+                            <option value="roi" {% if sort == 'roi' %}selected{% endif %}>Najwyższy ROI (%)</option>
+                            <option value="profit" {% if sort == 'profit' %}selected{% endif %}>Najwyższy zysk netto (PLN)</option>
+                            <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Najniższa cena zakupu</option>
+                            <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Najwyższa cena zakupu</option>
+                            <option value="price_m2_asc" {% if sort == 'price_m2_asc' %}selected{% endif %}>Najniższa cena za m²</option>
+                            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Najnowsze ogłoszenia</option>
+                        </select>
+                    </div>
+
+                    <!-- Dodatkowe parametry (Checkboxy) -->
+                    <div class="flex flex-col justify-end space-y-2 pb-1">
+                        <label class="inline-flex items-center text-xs text-stone-700 cursor-pointer">
+                            <input type="checkbox" name="direct_only" value="true" {% if direct_only %}checked{% endif %} class="rounded border-sand-300 text-stone-900 focus:ring-stone-950 mr-2">
+                            <span>Tylko oferty bezpośrednie</span>
+                        </label>
+                        <label class="inline-flex items-center text-xs text-stone-700 cursor-pointer">
+                            <input type="checkbox" name="has_balcony" value="true" {% if has_balcony %}checked{% endif %} class="rounded border-sand-300 text-stone-900 focus:ring-stone-950 mr-2">
+                            <span>Mieszkanie z balkonem lub loggią</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Pasek dolny w drawerze z podsumowaniem i czyszczeniem -->
+                <div class="mt-4 pt-3 border-t border-sand-200 flex flex-wrap items-center justify-between gap-2">
+                    <div class="text-xs text-stone-500">
+                        Liczba aktywnych kryteriów: <span class="font-bold text-stone-900">{{ active_filters_count }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        {% if active_filters_count > 0 %}
+                        <a href="/" class="text-xs text-stone-600 hover:text-stone-900 font-medium px-3 py-1.5 rounded-lg border border-sand-300 hover:bg-sand-100 transition">
+                            <i class="fa-solid fa-xmark mr-1"></i>Wyczyść filtry
+                        </a>
+                        {% endif %}
+                        <button type="submit" class="bg-stone-950 hover:bg-stone-850 text-sand-50 text-xs font-bold py-1.5 px-4 rounded-xl transition shadow-xs">
+                            Zastosuj kryteria
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Pasek informacyjny: Wyniki i Szybkie Akcje -->
+        <div class="mt-4 pt-3 border-t border-sand-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="text-stone-600 flex items-center gap-2">
+                <span>Wyniki: <strong class="text-stone-900">{{ listings|length }}</strong> z <strong>{{ all_count }}</strong> ogłoszeń</span>
+                {% if active_filters_count > 0 %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+                    Aktywne filtry: {{ active_filters_count }}
+                </span>
+                <a href="/" class="text-stone-500 hover:text-stone-900 underline text-[11px] ml-1">Wyczyść</a>
+                {% endif %}
+            </div>
+            <div>
+                <button @click="triggerScrape()" :disabled="scraping" class="px-3.5 py-1.5 bg-sand-100 hover:bg-sand-200 text-stone-900 border border-sand-300 rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-2">
+                    <i class="fa-solid fa-arrows-rotate" :class="{ 'fa-spin': scraping }"></i>
+                    <span x-text="scraping ? 'Skanowanie portali...' : 'Skanuj nowe ogłoszenia'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listings Feed -->
+    <div class="space-y-6">
+        {% if not listings %}
+        <div class="bg-white rounded-xl border border-nesta-border p-12 text-center">
+            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400 text-2xl">
+                <i class="fa-regular fa-folder-open"></i>
+            </div>
+            <h4 class="text-lg font-bold text-slate-800">Brak ofert spełniających kryteria</h4>
+            <p class="text-sm text-slate-500 mt-1 max-w-md mx-auto">
+                Uruchom skanowanie portali lub skorzystaj z zakładki <strong>Szybka Wklejka</strong>, aby dodać pierwsze ogłoszenie.
+            </p>
+            <div class="mt-6">
+                <a href="/quick-ingest" class="inline-flex items-center px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-plus mr-2"></i>Dodaj Ofertę Ręcznie
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        {% for item in listings %}
+        <div class="bg-white rounded-xl border {% if item.gate_1_decision == 'DZWONIMY' %}border-emerald-300 ring-1 ring-emerald-200{% else %}border-nesta-border{% endif %} shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            
+            <!-- Card Header -->
+            <div class="p-6 border-b border-slate-100 flex flex-wrap items-start justify-between gap-4">
+                <div class="flex-1 min-w-[280px]">
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                        <!-- Bramka 1 Badge -->
+                        {% if item.gate_1_decision == 'DZWONIMY' %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white tracking-wide uppercase">
+                            <i class="fa-solid fa-phone mr-1.5"></i>DZWONIMY
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">
+                            STOP
+                        </span>
+                        {% endif %}
+
+                        <!-- Deal Score -->
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {% if item.deal_score >= 80 %}bg-amber-100 text-amber-900 border border-amber-300{% elif item.deal_score >= 60 %}bg-blue-100 text-blue-900{% else %}bg-slate-100 text-slate-700{% endif %}">
+                            Deal Score: {{ item.deal_score }}/100
+                        </span>
+
+                        <!-- Source Badge -->
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 uppercase">
+                            {{ item.source }}
+                        </span>
+
+                        <!-- Dzielnica -->
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-white">
+                            📍 {{ item.district }}
+                        </span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-slate-900 leading-snug">
+                        {{ item.title }}
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1">
+                        {% if item.street %}<span class="font-medium text-slate-700">{{ item.street }}</span> &bull; {% endif %}
+                        Dodano: {{ item.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    </p>
+                </div>
+
+                <!-- Price Tag -->
+                <div class="text-right">
+                    <div class="text-2xl font-extrabold text-slate-900">
+                        {{ "{:,.0f}".format(item.price_pln).replace(',', ' ') }} PLN
+                    </div>
+                    <div class="text-sm font-semibold text-slate-500">
+                        {{ "{:,.0f}".format(item.price_per_m2).replace(',', ' ') }} zł/m²
+                    </div>
+                </div>
+            </div>
+
+            <!-- Specs Bar -->
+            <div class="bg-slate-50/70 px-6 py-3 border-b border-slate-100 flex flex-wrap items-center gap-6 text-sm text-slate-700">
+                <div>
+                    <span class="text-slate-400 text-xs block">Metraż</span>
+                    <strong class="text-slate-900">{{ item.area_m2 }} m²</strong>
+                    {% if item.rooms %}<span class="text-xs text-slate-500">({{ item.rooms }} pok.)</span>{% endif %}
+                </div>
+
+                <div>
+                    <span class="text-slate-400 text-xs block">Kondygnacja</span>
+                    <strong class="text-slate-900">{{ item.floor if item.floor is not none else '?' }} / {{ item.total_floors if item.total_floors else '?' }}</strong>
+                    {% if item.has_elevator %}<span class="text-xs text-emerald-600 font-semibold">(Winda)</span>{% endif %}
+                </div>
+
+                <div>
+                    <span class="text-slate-400 text-xs block">Budynek</span>
+                    <strong class="text-slate-900">{{ item.building_type or 'Kamienica' }}</strong>
+                </div>
+
+                <!-- Ogrzewanie (Nesta Key Factor) -->
+                <div>
+                    <span class="text-slate-400 text-xs block">Ogrzewanie</span>
+                    {% if item.heating_source and 'kaf' in item.heating_source.lower() %}
+                    <span class="inline-flex items-center text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                        <i class="fa-solid fa-fire mr-1"></i>{{ item.heating_source }} (Atut Nesta!)
+                    </span>
+                    {% elif item.heating_source %}
+                    <strong class="text-slate-900 text-xs">{{ item.heating_source }}</strong>
+                    {% else %}
+                    <span class="text-xs text-slate-400">Do weryfikacji</span>
+                    {% endif %}
+                </div>
+
+                {% if item.has_balcony %}
+                <div>
+                    <span class="text-slate-400 text-xs block">Balkon</span>
+                    <span class="text-xs font-bold text-emerald-700"><i class="fa-solid fa-check mr-1"></i>{{ item.balcony_type or 'Balkon' }} (+3% ARV)</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Financial Calculations Grid -->
+            <div class="p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 border-b border-slate-100 bg-white">
+                <div class="p-3 bg-slate-50 rounded-lg">
+                    <span class="text-xs font-medium text-slate-500 block">Szac. Remont</span>
+                    <span class="text-sm font-bold text-slate-800">{{ "{:,.0f}".format(item.estimated_renovation or 0).replace(',', ' ') }} zł</span>
+                </div>
+
+                <div class="p-3 bg-slate-50 rounded-lg">
+                    <span class="text-xs font-medium text-slate-500 block">ARV (Wyjście)</span>
+                    <span class="text-sm font-bold text-slate-800">{{ "{:,.0f}".format(item.arv_target or 0).replace(',', ' ') }} zł</span>
+                </div>
+
+                <div class="p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                    <span class="text-xs font-medium text-emerald-700 block">Zysk Netto</span>
+                    <span class="text-sm font-extrabold text-emerald-800">{{ "{:,.0f}".format(item.company_net_profit_pln or 0).replace(',', ' ') }} zł</span>
+                </div>
+
+                <div class="p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                    <span class="text-xs font-medium text-emerald-700 block">Zwrot ROI</span>
+                    <span class="text-base font-extrabold text-emerald-800">{{ "%.1f"|format((item.roi_target or 0) * 100) }}%</span>
+                </div>
+
+                <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <span class="text-xs font-medium text-amber-800 block">Walk-Away Price</span>
+                    <span class="text-sm font-bold text-amber-900">{{ "{:,.0f}".format(item.walk_away_price or 0).replace(',', ' ') }} zł</span>
+                </div>
+
+                <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <span class="text-xs font-medium text-amber-800 block">Kotwica (Anchor)</span>
+                    <span class="text-sm font-bold text-amber-900">{{ "{:,.0f}".format(item.anchor_price or 0).replace(',', ' ') }} zł</span>
+                </div>
+            </div>
+
+            <!-- AI Insight Section -->
+            <div class="p-6 bg-slate-50/50">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Atuty -->
+                    <div>
+                        <h5 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2 flex items-center">
+                            <i class="fa-solid fa-thumbs-up mr-1.5"></i>Atuty Inwestycyjne
+                        </h5>
+                        <ul class="text-xs text-slate-600 space-y-1">
+                            {% for pro in (item.pros or []) %}
+                            <li class="flex items-start">
+                                <span class="text-emerald-500 mr-1.5">&bull;</span>{{ pro }}
+                            </li>
+                            {% else %}
+                            <li class="text-slate-400">Brak uwag</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Ryzyka i Braki -->
+                    <div>
+                        <h5 class="text-xs font-bold text-red-800 uppercase tracking-wider mb-2 flex items-center">
+                            <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>Ryzyka (Do sprawdzenia)
+                        </h5>
+                        <ul class="text-xs text-slate-600 space-y-1">
+                            {% for flag in (item.red_flags or []) %}
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-1.5">&bull;</span>{{ flag }}
+                            </li>
+                            {% else %}
+                            <li class="text-slate-400">Brak krytycznych ryzyk</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Argumenty do Negocjacji -->
+                    <div>
+                        <h5 class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-2 flex items-center">
+                            <i class="fa-solid fa-comments-dollar mr-1.5"></i>Dźwignie do Negocjacji
+                        </h5>
+                        <ul class="text-xs text-slate-600 space-y-1">
+                            {% for arg in (item.negotiation_arguments or []) %}
+                            <li class="flex items-start">
+                                <span class="text-amber-600 mr-1.5">&bull;</span>{{ arg }}
+                            </li>
+                            {% else %}
+                            <li class="text-slate-400">Brak gotowych argumentów</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                {% if item.room_layout_potential %}
+                <div class="mt-4 pt-3 border-t border-slate-200/60 text-xs text-slate-600">
+                    <strong class="text-slate-800">Potencjał układu funkcjonalnego:</strong> {{ item.room_layout_potential }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Card Actions -->
+            <div class="px-6 py-4 bg-white border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center space-x-3">
+                    {% if item.url %}
+                    <a href="{{ item.url }}" target="_blank" class="text-xs font-semibold text-slate-700 hover:text-slate-900 inline-flex items-center">
+                        <i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i>Otwórz Źródło
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <!-- Feedback Loop Buttons -->
+                    <button @click="sendFeedback({{ item.id }}, 'INTERESTED')" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
+                        <i class="fa-solid fa-check text-emerald-600 mr-1"></i>Oględziny
+                    </button>
+                    <button @click="sendFeedback({{ item.id }}, 'REJECTED')" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
+                        <i class="fa-solid fa-xmark text-red-600 mr-1"></i>Odrzuć
+                    </button>
+
+                    <!-- Send to Nesta Master Tracker Button -->
+                    {% if item.tracker_synced %}
+                    <span class="inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                        <i class="fa-solid fa-check-double mr-1.5"></i>W Trackerze (ID #{{ item.tracker_staging_id or '?' }})
+                    </span>
+                    {% else %}
+                    <button @click="syncToTracker({{ item.id }})" :disabled="syncingId === {{ item.id }}" class="inline-flex items-center px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-up mr-1.5" :class="{ 'fa-spin': syncingId === {{ item.id }} }"></i>
+                        <span x-text="syncingId === {{ item.id }} ? 'Wysyłanie...' : 'Wyślij do Master Trackera'"></span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function dealFeed() {
+        return {
+            scraping: false,
+            syncingId: null,
+            showAdvanced: {{ 'true' if (price_min is not none or price_max is not none or area_min is not none or area_max is not none or (rooms and rooms != 'ALL') or (building_type and building_type != 'ALL') or (heating and heating != 'ALL') or direct_only or has_balcony or min_roi) else 'false' }},
+
+            async triggerScrape() {
+                this.scraping = true;
+                try {
+                    const resp = await fetch('/api/v1/trigger-scrape', { method: 'POST' });
+                    const res = await resp.json();
+                    alert(`Skanowanie zakończone!\nPobrano: ${res.fetched_total} ogłoszeń\nZapisano nowych: ${res.saved}\nZakwalifikowano jako okazje: ${res.qualified_hot_deals}`);
+                    window.location.reload();
+                } catch (e) {
+                    alert('Błąd skanowania: ' + e);
+                } finally {
+                    this.scraping = false;
+                }
+            },
+
+            async syncToTracker(listingId) {
+                this.syncingId = listingId;
+                try {
+                    const resp = await fetch(`/api/v1/listings/${listingId}/sync-tracker`, { method: 'POST' });
+                    const res = await resp.json();
+                    if (resp.ok && res.status === 'success') {
+                        alert(res.message);
+                        window.location.reload();
+                    } else {
+                        if (confirm(`${res.message}\nCzy chcesz wymusić zapis?`)) {
+                            const forceResp = await fetch(`/api/v1/listings/${listingId}/sync-tracker?force=true`, { method: 'POST' });
+                            const forceRes = await forceResp.json();
+                            alert(forceRes.message || 'Wymuszono zapis');
+                            window.location.reload();
+                        }
+                    }
+                } catch (e) {
+                    alert('Błąd komunikacji z Master Trackerem: ' + e);
+                } finally {
+                    this.syncingId = null;
+                }
+            },
+
+            async sendFeedback(listingId, decision) {
+                const comment = prompt(decision === 'INTERESTED' ? 'Notatka do oględzin (opcjonalnie):' : 'Powód odrzucenia (np. stan stropów, ciemna oficyna):');
+                if (comment === null && decision === 'REJECTED') return;
+
+                const form = new FormData();
+                form.append('decision', decision);
+                if (comment) form.append('comment', comment);
+
+                try {
+                    const resp = await fetch(`/api/v1/listings/${listingId}/feedback`, { method: 'POST', body: form });
+                    const res = await resp.json();
+                    alert(res.message);
+                    window.location.reload();
+                } catch (e) {
+                    alert('Błąd zapisu feedbacku: ' + e);
+                }
+            }
+        }
+    }
+</script>
+{% endblock %}
