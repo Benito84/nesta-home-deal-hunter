@@ -145,6 +145,8 @@ def index_view(
         query = query.order_by(Listing.price_per_m2.asc())
     elif sort == "newest":
         query = query.order_by(Listing.created_at.desc())
+    elif sort == "oldest":
+        query = query.order_by(Listing.created_at.asc())
     else:  # default: score
         query = query.order_by(Listing.deal_score.desc())
 

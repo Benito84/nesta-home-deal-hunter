@@ -6,6 +6,7 @@ danych strukturalnych z obiektu hydratacji __NEXT_DATA__ bez konieczności logow
 
 import json
 import re
+from datetime import datetime
 from typing import List, Dict, Any, Optional
 from bs4 import BeautifulSoup
 from curl_cffi import requests as cffi_requests
@@ -118,6 +119,15 @@ class OtodomConnector(BaseConnector):
                     # Prywatne vs biuro
                     is_private = bool(it.get("isPrivateOwner"))
 
+                    # Data publikacji na Otodom
+                    published_at = None
+                    raw_date = it.get("dateCreated") or it.get("createdAt") or it.get("dateCreatedFirst")
+                    if raw_date:
+                        try:
+                            published_at = datetime.fromisoformat(str(raw_date).replace("Z", "+00:00"))
+                        except Exception:
+                            pass
+
                     desc = f"{title}. Szczecin, {district}. {loc_full}. Tagi: {', '.join(tags)}."
 
                     if area > 0 and price > 0:
@@ -138,7 +148,8 @@ class OtodomConnector(BaseConnector):
                             "heating_source": None,
                             "has_balcony": has_balcony,
                             "has_agency_fee": not is_private,
-                            "admin_rent": admin_rent
+                            "admin_rent": admin_rent,
+                            "published_at": published_at
                         })
 
                 except Exception as ie:

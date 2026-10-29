@@ -211,7 +211,8 @@
                             <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Najniższa cena zakupu</option>
                             <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Najwyższa cena zakupu</option>
                             <option value="price_m2_asc" {% if sort == 'price_m2_asc' %}selected{% endif %}>Najniższa cena za m²</option>
-                            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Najnowsze ogłoszenia</option>
+                            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Najnowsze (najświeższe)</option>
+                            <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Najdłużej na rynku (do negocjacji)</option>
                         </select>
                     </div>
 
@@ -309,6 +310,14 @@
                             Deal Score: {{ item.deal_score }}/100
                         </span>
 
+                        <!-- Freshness Badge -->
+                        {% set fb = (item.published_at or item.created_at)|freshness_badge %}
+                        {% if fb %}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs {{ fb.class }}" title="{{ fb.hint }}">
+                            <i class="fa-solid {{ fb.icon }} mr-1.5 text-[10px]"></i>{{ fb.label }}
+                        </span>
+                        {% endif %}
+
                         <!-- Source Badge -->
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 uppercase">
                             {{ item.source }}
@@ -323,10 +332,21 @@
                     <h3 class="text-xl font-bold text-slate-900 leading-snug">
                         {{ item.title }}
                     </h3>
-                    <p class="text-xs text-slate-500 mt-1">
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-1.5">
                         {% if item.street %}<span class="font-medium text-slate-700">{{ item.street }}</span> &bull; {% endif %}
-                        Dodano: {{ item.created_at.strftime('%d.%m.%Y %H:%M') }}
-                    </p>
+                        <span class="inline-flex items-center text-slate-700">
+                            <i class="fa-regular fa-clock mr-1.5 text-slate-400"></i>
+                            Widoczne od: <strong class="text-slate-900 ml-1">{{ (item.published_at or item.created_at)|format_datetime }}</strong>
+                        </span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold {{ (item.published_at or item.created_at)|freshness_pill_class }}">
+                            {{ (item.published_at or item.created_at)|time_ago }}
+                        </span>
+                        {% if (item.published_at or item.created_at)|is_aged %}
+                        <span class="inline-flex items-center text-amber-700 font-medium text-[11px]" title="Oferta wisi na rynku od dłuższego czasu - idealna do agresywnych negocjacji cenowych">
+                            <i class="fa-solid fa-hand-holding-dollar mr-1"></i>Potencjał negocjacji ceny
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
 
                 <!-- Price Tag -->

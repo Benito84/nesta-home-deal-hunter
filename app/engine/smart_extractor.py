@@ -8,6 +8,7 @@ Zgodnie ze Standardem Nesta Home v4.16 - zero dodatkowych pól dla użytkownika.
 import re
 import json
 import logging
+from datetime import datetime
 from typing import Dict, Any, Optional, Tuple
 from bs4 import BeautifulSoup
 
@@ -136,6 +137,13 @@ def extract_from_url(url: str) -> Tuple[str, str, Dict[str, Any]]:
                         meta_props["street"] = address["streetAddress"]
                     if address.get("addressLocality"):
                         meta_props["district"] = address["addressLocality"]
+                # Date posted
+                raw_date = data.get("datePosted") or data.get("dateCreated") or data.get("uploadDate")
+                if raw_date:
+                    try:
+                        meta_props["published_at"] = datetime.fromisoformat(str(raw_date).replace("Z", "+00:00"))
+                    except Exception:
+                        pass
         except Exception:
             pass
 

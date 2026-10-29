@@ -131,6 +131,7 @@ def process_raw_listing(raw: Dict[str, Any], session: Session) -> Tuple[Optional
         seller_phone=raw.get("seller_phone"),
         cluster_id=cluster.id,
         content_hash=fingerprint,
+        published_at=raw.get("published_at"),
 
         # Matematyka
         deal_score=ai_res.deal_score,

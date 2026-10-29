@@ -109,5 +109,6 @@ class Listing(SQLModel, table=True):
 
     # Metadane
     created_at: datetime = Field(default_factory=utc_now, index=True)
+    published_at: Optional[datetime] = Field(default=None, index=True)
     updated_at: datetime = Field(default_factory=utc_now)
     is_active: bool = Field(default=True)

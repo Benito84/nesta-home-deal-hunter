@@ -38,6 +38,9 @@ def init_db():
             if cols and "content_hash" not in cols:
                 conn.exec_driver_sql("ALTER TABLE listings ADD COLUMN content_hash VARCHAR")
                 conn.commit()
+            if cols and "published_at" not in cols:
+                conn.exec_driver_sql("ALTER TABLE listings ADD COLUMN published_at DATETIME")
+                conn.commit()
         except Exception as e:
             print(f"[DB Migration Warning]: {e}")
 
