@@ -19,7 +19,7 @@ def send_telegram_deal_alert(listing: Listing) -> bool:
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
 
     gate = listing.gate_1_decision or "STOP"
-    gate_emoji = "🔥 DZWONIMY" if gate == "DZWONIMY" else ("⚡ LICYTUJ" if gate == "LICYTUJ" else "ℹ️ INFO")
+    gate_emoji = "📥 DO POCZEKALNI" if gate in ["DO POCZEKALNI", "DZWONIMY"] else ("⚡ LICYTUJ" if gate == "LICYTUJ" else "ℹ️ INFO")
 
     # Tworzenie treści wiadomości
     text = f"""<b>{gate_emoji} | Deal Score: {listing.deal_score}/100</b>

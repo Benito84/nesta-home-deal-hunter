@@ -142,7 +142,7 @@ def process_raw_listing(raw: Dict[str, Any], session: Session) -> Tuple[Optional
         red_flags=ai_res.red_flags,
         negotiation_arguments=ai_res.negotiation_arguments,
         ai_analyzed_at=datetime.now(timezone.utc),
-        status="QUALIFIED" if calc.get("gate_1_decision") == "DZWONIMY" else "NEW"
+        status="QUALIFIED" if calc.get("gate_1_decision") in ["DO POCZEKALNI", "DZWONIMY"] else "NEW"
     )
 
     session.add(listing)
@@ -150,7 +150,7 @@ def process_raw_listing(raw: Dict[str, Any], session: Session) -> Tuple[Optional
     session.refresh(listing)
 
     # 8. Natychmiastowy Alert Telegram dla najlepszych okazji
-    if listing.gate_1_decision == "DZWONIMY" or listing.deal_score >= 80:
+    if listing.gate_1_decision in ["DO POCZEKALNI", "DZWONIMY"] or listing.deal_score >= 80:
         send_telegram_deal_alert(listing)
 
     return listing, "Pomyślnie przeanalizowano i dodano ofertę"

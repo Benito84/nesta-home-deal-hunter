@@ -364,7 +364,7 @@
                 try {
                     const resp = await fetch('/api/v1/trigger-scrape', { method: 'POST' });
                     const data = await resp.json();
-                    alert(`Skanowanie zakończone sukcesem!\nPobrano łącznie: ${data.fetched_total} ofert\nZapisano nowych po filtrach: ${data.saved}\nZakwalifikowane jako okazje (DZWONIMY): ${data.qualified_hot_deals}`);
+                    alert(`Skanowanie zakończone sukcesem!\nPobrano łącznie: ${data.fetched_total} ofert\nZapisano nowych po filtrach: ${data.saved}\nZakwalifikowane do Poczekalni Trackera: ${data.qualified_hot_deals}`);
                     window.location.href = '/';
                 } catch (e) {
                     alert('Wystąpił błąd: ' + e);

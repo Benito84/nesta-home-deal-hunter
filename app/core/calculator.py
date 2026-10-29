@@ -308,8 +308,8 @@ def calculate_investment(
     if is_auction:
         gate_1 = "LICYTUJ" if walk_away_price >= price_pln else "STOP"
     else:
-        # Bramka 1: DZWONIMY jeśli ROI >= min_roi ORAZ zysk netto >= 30 000 zł
-        gate_1 = "DZWONIMY" if (roi_target >= round(min_roi, 4) and gross_profit >= 30000.0) else "STOP"
+        # Bramka 1: DO POCZEKALNI jeśli ROI >= min_roi ORAZ zysk netto >= 30 000 zł (przekazanie do app.nestahome.pl)
+        gate_1 = "DO POCZEKALNI" if (roi_target >= round(min_roi, 4) and gross_profit >= 30000.0) else "STOP"
 
     deposit_required = round(deposit_amount if (deposit_amount is not None and float(deposit_amount) > 0) else (price_pln * 0.10), 2)
     bidding_spread = round(max(0.0, walk_away_price - price_pln), 2)

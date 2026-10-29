@@ -134,7 +134,7 @@ def trigger_scrape_endpoint(session: Session = Depends(get_session)):
         l, msg = process_raw_listing(item, session)
         if l:
             processed_count += 1
-            if l.gate_1_decision == "DZWONIMY":
+            if l.gate_1_decision in ["DO POCZEKALNI", "DZWONIMY"]:
                 qualified_count += 1
 
     return {

@@ -35,11 +35,11 @@
 
         <div class="bg-white p-5 rounded-2xl border border-emerald-200 shadow-xs flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Bramka 1: DZWONIMY</p>
+                <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Do poczekalni (Staging)</p>
                 <h3 class="text-2xl font-bold text-emerald-800 mt-1">{{ gate_call_count }}</h3>
             </div>
             <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                <i class="fa-solid fa-phone-volume text-lg"></i>
+                <i class="fa-solid fa-inbox text-lg"></i>
             </div>
         </div>
 
@@ -112,7 +112,7 @@
                     <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Bramka 1</label>
                     <select name="gate" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl px-3 py-2 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
                         <option value="ALL" {% if gate == 'ALL' %}selected{% endif %}>Wszystkie</option>
-                        <option value="DZWONIMY" {% if gate == 'DZWONIMY' %}selected{% endif %}>Tylko DZWONIMY</option>
+                        <option value="DO POCZEKALNI" {% if gate in ['DO POCZEKALNI', 'DO_POCZEKALNI', 'DZWONIMY'] %}selected{% endif %}>Do poczekalni (ROI &ge; 16%)</option>
                         <option value="STOP" {% if gate == 'STOP' %}selected{% endif %}>Tylko STOP</option>
                     </select>
                 </div>
@@ -294,9 +294,9 @@
                 <div class="flex-1 min-w-[280px]">
                     <div class="flex flex-wrap items-center gap-2 mb-2">
                         <!-- Bramka 1 Badge -->
-                        {% if item.gate_1_decision == 'DZWONIMY' %}
+                        {% if item.gate_1_decision in ['DO POCZEKALNI', 'DZWONIMY'] %}
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white tracking-wide uppercase">
-                            <i class="fa-solid fa-phone mr-1.5"></i>DZWONIMY
+                            <i class="fa-solid fa-inbox mr-1.5"></i>DO POCZEKALNI
                         </span>
                         {% else %}
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">

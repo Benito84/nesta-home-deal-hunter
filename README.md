@@ -12,7 +12,8 @@ Aplikacja wspiera zespół spółki inwestycyjnej **Nesta Home** ([nestahome.pl]
 * **Sweet Spot:** Mieszkania **38 m² – 55 m²** (układ 2–3 pokoje) o najwyższej płynności rynkowej i krótkim cyklu remontu (6–8 tygodni).
 * **Segment szybkich obrotów:** Mieszkania **25 m² – 35 m²** (cykl obrotu < 90–120 dni).
 * **Piece kaflowe w kamienicach = Główny Atut:** Zwykli kupujący omijają je szerokim łukiem, co pozwala wynegocjować drastycznie niższą cenę zakupu (4 500 – 6 200 zł/m² w Śródmieściu). Zespół Nesta (na czele z Kierownikiem Budowy Jankiem) posiada opanowany proces wymiany instalacji grzewczej (kocioł kondensacyjny 2-f lub miejska sieć SEC).
-* **Twarda Bramka 1 („DZWONIMY”):**
+* **Twarda Bramka 1 („DO POCZEKALNI”):**
+  * Kwalifikacja do poczekalni (Staging) centralnego Master Trackera w głównej aplikacji **app.nestahome.pl**.
   * Minimalny zwrot z całego zainwestowanego kapitału: **ROI $\ge$ 16.0%**.
   * Minimalny czysty zysk spółki: **$\ge$ 30 000 – 40 000 PLN** (po uwzględnieniu prowizji koordynatora 12% min. 10 000 zł, podatku PCC 2%, taksy notarialnej ~1 850 zł, mediów budowlanych i bufora negocjacyjnego 2%).
   * Koszty remontu: **Kamienica 1 900 zł/m²**, **Blok/Płyta 1 700 zł/m²**, **Nowe budownictwo 1 500 zł/m²**.

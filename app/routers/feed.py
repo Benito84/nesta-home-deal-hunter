@@ -74,7 +74,10 @@ def index_view(
 
     # 4. Decyzja bramki
     if gate and gate != "ALL":
-        query = query.where(Listing.gate_1_decision == gate)
+        if gate in ["DO POCZEKALNI", "DO_POCZEKALNI", "DZWONIMY"]:
+            query = query.where(or_(Listing.gate_1_decision == "DO POCZEKALNI", Listing.gate_1_decision == "DZWONIMY"))
+        else:
+            query = query.where(Listing.gate_1_decision == gate)
         active_filters_count += 1
 
     # 5. Przedział cenowy
@@ -145,7 +148,7 @@ def index_view(
 
     listings = session.exec(query).all()
     all_count = len(session.exec(select(Listing)).all())
-    gate_call_count = len(session.exec(select(Listing).where(Listing.gate_1_decision == "DZWONIMY")).all())
+    gate_call_count = len(session.exec(select(Listing).where(or_(Listing.gate_1_decision == "DO POCZEKALNI", Listing.gate_1_decision == "DZWONIMY"))).all())
     synced_count = len(session.exec(select(Listing).where(Listing.tracker_synced == True)).all())
 
     rois = [l.roi_target for l in listings if l.roi_target]
