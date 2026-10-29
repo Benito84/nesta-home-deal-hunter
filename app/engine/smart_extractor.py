@@ -71,6 +71,11 @@ POPULAR_STREETS = [
 
 def extract_from_url(url: str) -> Tuple[str, str, Dict[str, Any]]:
     """Pobiera zawartość strony i metadane z podanego linku"""
+    from app.engine.freshness_checker import check_single_url_alive
+    is_alive, reason = check_single_url_alive(url)
+    if not is_alive:
+        raise ValueError(f"Ogłoszenie na portalu źródłowym jest nieaktualne lub wygasło: {reason}")
+
     html = ""
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",

@@ -28,7 +28,25 @@ def pre_filter_listing(
     if not area_m2 or area_m2 <= 0 or not price_pln or price_pln <= 0:
         return False, "Nieprawidłowy metraż lub cena (<= 0)"
 
-    # Szybka wklejka użytkownika ma zawsze pełną analizę finansową
+    text_content = f"{title or ''} {description or ''}".lower()
+
+    # 0. Weryfikacja sygnatur nieaktualności, zakończenia lub rezerwacji
+    expired_signatures = [
+        "ogłoszenie nieaktualne", "ogloszenie nieaktualne", "oferta nieaktualna",
+        "to ogłoszenie jest nieaktualne", "to ogloszenie jest nieaktualne",
+        "ta oferta jest już nieaktualna", "ogłoszenie zakończone", "ogloszenie zakonczone",
+        "ogłoszenie wygasło", "ogloszenie wygaslo", "oferta wycofana",
+        "oferta archiwalna", "ogłoszenie archiwalne", "ogloszenie archiwalne",
+        "ogłoszenie nie jest już dostępne", "ogloszenie nie jest juz dostepne",
+        "ogłoszenie zostało usunięte", "ogloszenie zostalo usuniete",
+        "sprzedane", "mieszkanie sprzedane", "lokal sprzedany",
+        "rezerwacja", "zarezerwowane", "mieszkanie zarezerwowane", "oferta w rezerwacji"
+    ]
+    for sig in expired_signatures:
+        if sig in text_content:
+            return False, f"Wykryto sygnaturę ogłoszenia archiwalnego lub zakończonego: '{sig}'"
+
+    # Szybka wklejka użytkownika ma zawsze pełną analizę finansową (jeśli nie jest wygasła)
     if source == "manual":
         return True, "Weryfikacja manualna użytkownika (Szybka wklejka)"
 

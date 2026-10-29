@@ -14,6 +14,7 @@ from app.engine.fingerprint import compute_listing_fingerprint
 from app.engine.ai_evaluator import evaluate_listing_ai
 from app.core.calculator import calculate_offer
 from app.alerts.telegram_bot import send_telegram_deal_alert
+from app.engine.freshness_checker import check_single_url_alive
 
 def process_raw_listing(raw: Dict[str, Any], session: Session) -> Tuple[Optional[Listing], str]:
     """
@@ -39,6 +40,8 @@ def process_raw_listing(raw: Dict[str, Any], session: Session) -> Tuple[Optional
     if url:
         existing = session.exec(select(Listing).where(Listing.url == url)).first()
         if existing:
+            if not existing.is_active or existing.status == "ARCHIVED":
+                return existing, "Oferta została wcześniej zarchiwizowana jako nieaktualna (pominięto)"
             drop = check_price_drop(session, existing, price_pln)
             if drop:
                 return existing, f"Zaktualizowano cenę (obniżka o {drop.drop_pct*100:.1f}%)"
@@ -47,7 +50,15 @@ def process_raw_listing(raw: Dict[str, Any], session: Session) -> Tuple[Optional
     # Sprawdzenie czy istnieje identyczna oferta po hashu
     existing_by_hash = session.exec(select(Listing).where(Listing.content_hash == fingerprint)).first()
     if existing_by_hash:
+        if not existing_by_hash.is_active or existing_by_hash.status == "ARCHIVED":
+            return existing_by_hash, "Identyczna oferta została wcześniej zarchiwizowana jako nieaktualna (pominięto)"
         return existing_by_hash, "Identyczna oferta już została wcześniej poddana ewaluacji (fingerprint cache)"
+
+    # Weryfikacja na żywo linku URL dla zgłoszeń manualnych / wklejanych
+    if url and (raw.get("source") == "manual" or raw.get("verify_live")):
+        is_alive, reason = check_single_url_alive(url)
+        if not is_alive:
+            return None, f"Odrzucono: ogłoszenie na portalu jest już nieaktualne ({reason})"
 
     # 2. Etap 1: Twardy filtr wstępny (oszczędność tokenów AI)
     passes, reason = pre_filter_listing(

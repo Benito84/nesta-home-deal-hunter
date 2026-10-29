@@ -55,12 +55,24 @@ async def quick_ingest_post(
         )
 
     # Automatyczna ekstrakcja parametrów oferty
-    extracted, source_note = smart_extract_listing(
-        url=url_clean or None,
-        raw_text=text_clean or None,
-        image_bytes=image_bytes,
-        mime_type=mime_type
-    )
+    try:
+        extracted, source_note = smart_extract_listing(
+            url=url_clean or None,
+            raw_text=text_clean or None,
+            image_bytes=image_bytes,
+            mime_type=mime_type
+        )
+    except ValueError as ve:
+        return templates.TemplateResponse(
+            request=request,
+            name="quick_ingest.html",
+            context={
+                "error": f"Błąd weryfikacji oferty: {ve}",
+                "url": url_clean,
+                "raw_text": text_clean
+            },
+            status_code=422
+        )
 
     # Weryfikacja kluczowych parametrów cenowych
     if not extracted.get("price_pln") or extracted.get("price_pln", 0) <= 0:
@@ -117,12 +129,18 @@ async def smart_ingest_api(
         image_bytes = await screenshot.read()
         mime_type = screenshot.content_type or "image/jpeg"
 
-    extracted, note = smart_extract_listing(
-        url=(url or "").strip() or None,
-        raw_text=(raw_text or "").strip() or None,
-        image_bytes=image_bytes,
-        mime_type=mime_type
-    )
+    try:
+        extracted, note = smart_extract_listing(
+            url=(url or "").strip() or None,
+            raw_text=(raw_text or "").strip() or None,
+            image_bytes=image_bytes,
+            mime_type=mime_type
+        )
+    except ValueError as ve:
+        return JSONResponse(
+            status_code=422,
+            content={"status": "error", "message": str(ve)}
+        )
 
     if not extracted.get("price_pln") or not extracted.get("area_m2"):
         return JSONResponse(
