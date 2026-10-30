@@ -512,24 +512,52 @@
 
                 <div class="flex items-center space-x-2">
                     <!-- Feedback Loop Buttons -->
-                    <button @click="openFeedbackModal({{ item.id }}, {{ item.title|tojson }}, 'INTERESTED')" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
-                        <i class="fa-solid fa-check text-emerald-600 mr-1"></i>Oględziny
+                    <button type="button" 
+                            data-title="{{ item.title|e }}" 
+                            @click="openFeedbackModal({{ item.id }}, $el.dataset.title, 'INTERESTED')" 
+                            class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-emerald-50 hover:border-emerald-400 text-xs font-semibold text-slate-700 hover:text-emerald-700 transition cursor-pointer shadow-xs inline-flex items-center">
+                        <i class="fa-solid fa-check text-emerald-600 mr-1.5"></i>Oględziny
                     </button>
-                    <button @click="openFeedbackModal({{ item.id }}, {{ item.title|tojson }}, 'REJECTED')" class="px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition">
-                        <i class="fa-solid fa-xmark mr-1"></i>Odrzuć
+                    <button type="button" 
+                            data-title="{{ item.title|e }}" 
+                            @click="openFeedbackModal({{ item.id }}, $el.dataset.title, 'REJECTED')" 
+                            class="px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 hover:border-rose-300 text-xs font-semibold text-rose-700 transition cursor-pointer shadow-xs inline-flex items-center">
+                        <i class="fa-solid fa-xmark mr-1.5"></i>Odrzuć
                     </button>
 
-                    <!-- Send to Nesta Master Tracker Button -->
-                    {% if item.tracker_synced %}
-                    <span class="inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
-                        <i class="fa-solid fa-check-double mr-1.5"></i>W Trackerze (ID #{{ item.tracker_staging_id or '?' }})
-                    </span>
-                    {% else %}
-                    <button @click="syncToTracker({{ item.id }})" :disabled="syncingId === {{ item.id }}" class="inline-flex items-center px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition shadow-sm">
-                        <i class="fa-solid fa-cloud-arrow-up mr-1.5" :class="{ 'fa-spin': syncingId === {{ item.id }} }"></i>
-                        <span x-text="syncingId === {{ item.id }} ? 'Wysyłanie...' : 'Wyślij do Master Trackera'"></span>
-                    </button>
-                    {% endif %}
+                    <!-- Send to Nesta Master Tracker Button Container (Always Active) -->
+                    <div class="flex flex-col items-end">
+                        <button type="button" 
+                                @click="syncToTracker({{ item.id }}, {{ 'true' if item.tracker_synced else 'false' }}, '{{ item.tracker_synced_at.strftime('%d.%m.%Y o %H:%M') if item.tracker_synced_at else '' }}')" 
+                                :disabled="syncingId === {{ item.id }}" 
+                                class="inline-flex items-center px-4 py-1.5 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+                                title="{{ 'Kliknij, aby wysłać ponownie' if item.tracker_synced else 'Przekaż ofertę do Poczekalni app.nestahome.pl' }}">
+                            <i class="fa-solid fa-cloud-arrow-up mr-1.5" :class="{ 'fa-spin': syncingId === {{ item.id }} }"></i>
+                            <span x-text="syncingId === {{ item.id }} ? 'Wysyłanie...' : '{{ 'Wyślij ponownie do Trackera' if item.tracker_synced else 'Wyślij do Master Trackera' }}'"></span>
+                        </button>
+                        
+                        <!-- Status note underneath the button with date and time -->
+                        {% if item.tracker_synced %}
+                        <div class="mt-1 text-[11px] font-medium text-emerald-700 flex items-center justify-end"
+                             x-show="!syncedMap[{{ item.id }}] || syncedMap[{{ item.id }}]?.status !== 'hidden'">
+                            <i class="fa-solid fa-circle-check text-[10px] mr-1 text-emerald-600"></i>
+                            <span>Wysłano: <strong><span x-text="syncedMap[{{ item.id }}]?.synced_at || '{{ item.tracker_synced_at.strftime('%d.%m.%Y o %H:%M') if item.tracker_synced_at else 'wcześniej' }}'"></span></strong></span>
+                            {% if item.tracker_staging_id %}
+                            <span class="text-slate-400 ml-1">(ID #{{ item.tracker_staging_id }})</span>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <template x-if="syncedMap[{{ item.id }}]">
+                            <div class="mt-1 text-[11px] font-medium text-emerald-700 flex items-center justify-end">
+                                <i class="fa-solid fa-circle-check text-[10px] mr-1 text-emerald-600"></i>
+                                <span>Wysłano: <strong><span x-text="syncedMap[{{ item.id }}]?.synced_at"></span></strong></span>
+                                <template x-if="syncedMap[{{ item.id }}]?.staging_id">
+                                    <span class="text-slate-400 ml-1" x-text="'(ID #' + syncedMap[{{ item.id }}]?.staging_id + ')'"></span>
+                                </template>
+                            </div>
+                        </template>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -638,6 +666,7 @@
             scraping: false,
             syncingId: null,
             checkingId: null,
+            syncedMap: {},
             showAdvanced: {{ 'true' if (price_min is not none or price_max is not none or area_min is not none or area_max is not none or (rooms and rooms != 'ALL') or (building_type and building_type != 'ALL') or (heating and heating != 'ALL') or direct_only or has_balcony or min_roi) else 'false' }},
 
             feedbackModal: {
@@ -714,27 +743,57 @@
                 }
             },
 
-            async syncToTracker(listingId) {
+            async syncToTracker(listingId, alreadySynced, syncedAt) {
+                if (this.syncingId === listingId) return;
+
+                const isAlready = alreadySynced || !!this.syncedMap[listingId];
+                if (isAlready) {
+                    const lastDate = this.syncedMap[listingId]?.synced_at || syncedAt;
+                    const dateMsg = lastDate ? ` (poprzednio: ${lastDate})` : '';
+                    const proceed = confirm(
+                        `Ta oferta znajduje się już w Poczekalni Master Trackera${dateMsg}.\n\n` +
+                        `Czy na pewno chcesz wysłać ją ponownie (np. jeśli została usunięta z poczekalni w głównej aplikacji)?`
+                    );
+                    if (!proceed) return;
+                }
+
                 this.syncingId = listingId;
                 try {
-                    const resp = await fetch(`/api/v1/listings/${listingId}/sync-tracker`, { method: 'POST' });
+                    // Jeśli była już synchronizowana, używamy od razu force=true, aby uniknąć błędu duplikatu
+                    const url = isAlready 
+                        ? `/api/v1/listings/${listingId}/sync-tracker?force=true`
+                        : `/api/v1/listings/${listingId}/sync-tracker`;
+
+                    const resp = await fetch(url, { method: 'POST' });
                     const res = await resp.json();
                     if (resp.ok && res.status === 'success') {
-                        alert(res.message);
+                        const timeStr = res.synced_at || new Date().toLocaleString('pl-PL', { dateStyle: 'short', timeStyle: 'short' });
+                        this.syncedMap[listingId] = {
+                            synced_at: timeStr,
+                            staging_id: res.staging_id
+                        };
+                        alert(res.message || 'Pomyślnie wysłano do Poczekalni Master Trackera!');
                         window.location.reload();
-                    } else {
-                        if (confirm(`${res.message}\nCzy chcesz wymusić zapis?`)) {
+                    } else if (res.status === 'error' && res.data?.existing_id) {
+                        if (confirm(`${res.message}\nCzy chcesz wymusić ponowne wysłanie?`)) {
                             const forceResp = await fetch(`/api/v1/listings/${listingId}/sync-tracker?force=true`, { method: 'POST' });
                             const forceRes = await forceResp.json();
-                            alert(forceRes.message || 'Wymuszono zapis');
-                            window.location.reload();
+                            if (forceResp.ok && forceRes.status === 'success') {
+                                alert(forceRes.message || 'Wymuszono ponowny zapis');
+                                window.location.reload();
+                            } else {
+                                alert(forceRes.message || 'Błąd wysyłania');
+                            }
                         }
+                    } else {
+                        alert(res.message || 'Błąd komunikacji z Master Trackerem');
                     }
                 } catch (e) {
                     alert('Błąd komunikacji z Master Trackerem: ' + e);
                 } finally {
                     this.syncingId = null;
                 }
+            },
             },
 
             async checkFreshness(listingId) {

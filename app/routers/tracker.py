@@ -24,10 +24,16 @@ def sync_tracker_endpoint(listing_id: int, force: bool = False, session: Session
     ok, msg, data = push_to_nesta_tracker(listing, force=force)
     if ok:
         listing.tracker_synced = True
-        listing.tracker_staging_id = data.get("staging_id")
+        listing.tracker_staging_id = str(data.get("staging_id") or listing.tracker_staging_id or "")
+        listing.tracker_synced_at = datetime.now(timezone.utc)
         session.add(listing)
         session.commit()
-        return {"status": "success", "message": msg, "staging_id": listing.tracker_staging_id}
+        return {
+            "status": "success",
+            "message": msg,
+            "staging_id": listing.tracker_staging_id,
+            "synced_at": listing.tracker_synced_at.strftime("%d.%m.%Y o %H:%M")
+        }
     else:
         return JSONResponse(status_code=400, content={"status": "error", "message": msg, "data": data})
 
