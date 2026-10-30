@@ -46,6 +46,21 @@ def pre_filter_listing(
         if sig in text_content:
             return False, f"Wykryto sygnaturę ogłoszenia archiwalnego lub zakończonego: '{sig}'"
 
+    # 0b. Odrzucenie reklam komercyjnych, skupu długów/spadków, usług i zapytań 'kupię'
+    service_signatures = [
+        "kupię spadek", "kupie spadek", "skup udziałów", "skup udzialow",
+        "skup mieszkań", "skup mieszkan", "skup nieruchomości", "skup nieruchomosci",
+        "problem ze spadkiem", "problem z udziałem", "problem z udzialem",
+        "nie dogadujesz się ze współwłaścicielami", "nie dogadujesz sie",
+        "czyszczenie zadłużeń", "czyszczenie zadluzen", "pożyczki pod zastaw",
+        "pozyczki pod zastaw", "doradztwo prawne", "pomoc prawna", "kancelaria odszkodowawcza",
+        "odkupię długi", "odkupie dlugi", "pomoc w oddłużaniu", "odkupię udział", "odkupie udzial",
+        "kupię za gotówkę", "kupie za gotowke", "kupię każde", "kupie kazde"
+    ]
+    for sig in service_signatures:
+        if sig in text_content:
+            return False, f"Odrzucono: Wykryto ogłoszenie usługowe / reklamę skupu / pomoc prawną: '{sig}'"
+
     # Szybka wklejka użytkownika ma zawsze pełną analizę finansową (jeśli nie jest wygasła)
     if source == "manual":
         return True, "Weryfikacja manualna użytkownika (Szybka wklejka)"

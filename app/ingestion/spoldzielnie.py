@@ -50,11 +50,15 @@ class SpoldzielnieConnector(BaseConnector):
                             
                             # Ekstrakcja metrażu jeśli występuje
                             m_area = re.search(r"(\d+(?:[.,]\d+)?)\s*m(?:2|²)", raw_title, re.I)
-                            area = float(m_area.group(1).replace(",", ".")) if m_area else 48.0
+                            if not m_area:
+                                continue
+                            area = float(m_area.group(1).replace(",", "."))
 
                             # Ekstrakcja ceny lub wadium
                             m_price = re.search(r"(\d[\d\s]{3,})\s*(?:zł|pln)", raw_title, re.I)
-                            price = parse_pln_amount(m_price.group(1)) if m_price else 220000.0
+                            if not m_price:
+                                continue
+                            price = parse_pln_amount(m_price.group(1))
 
                             results.append({
                                 "source": "spoldzielnie",
@@ -91,6 +95,15 @@ class SpoldzielnieConnector(BaseConnector):
                             ext_id = f"sm-dab-{abs(hash(full_url)) % 100000}"
                             clean_t = re.sub(r"\s+", " ", txt)
                             
+                            # Ekstrakcja metrażu i ceny
+                            m_area = re.search(r"(\d+(?:[.,]\d+)?)\s*m(?:2|²)", clean_t, re.I)
+                            m_price = re.search(r"(\d[\d\s]{3,})\s*(?:zł|pln)", clean_t, re.I)
+                            if not m_area or not m_price:
+                                continue
+                            
+                            area = float(m_area.group(1).replace(",", "."))
+                            price = parse_pln_amount(m_price.group(1))
+                            
                             results.append({
                                 "source": "spoldzielnie",
                                 "external_id": ext_id,
@@ -99,8 +112,8 @@ class SpoldzielnieConnector(BaseConnector):
                                 "description": f"PRZETARG SPÓŁDZIELCZY SM DĄB (SZCZECIN PRAWOBRZEŻE)\nLokale z odzysku / przetarg ofertowy: {clean_t}",
                                 "district": "Prawobrzeże",
                                 "street": None,
-                                "area_m2": 52.0,
-                                "price_pln": 280000.0,
+                                "area_m2": area,
+                                "price_pln": price,
                                 "rooms": 2,
                                 "floor": None,
                                 "total_floors": 4,
@@ -126,6 +139,14 @@ class SpoldzielnieConnector(BaseConnector):
                             district = match_szczecin_district(clean_t)
                             ext_id = f"sm-wdom-{abs(hash(href)) % 100000}"
 
+                            m_area = re.search(r"(\d+(?:[.,]\d+)?)\s*m(?:2|²)", clean_t, re.I)
+                            m_price = re.search(r"(\d[\d\s]{3,})\s*(?:zł|pln)", clean_t, re.I)
+                            if not m_area or not m_price:
+                                continue
+
+                            area = float(m_area.group(1).replace(",", "."))
+                            price = parse_pln_amount(m_price.group(1))
+
                             results.append({
                                 "source": "spoldzielnie",
                                 "external_id": ext_id,
@@ -134,8 +155,8 @@ class SpoldzielnieConnector(BaseConnector):
                                 "description": f"PRZETARG SM WSPÓLNY DOM SZCZECIN\n{clean_t}",
                                 "district": district,
                                 "street": None,
-                                "area_m2": 50.0,
-                                "price_pln": 260000.0,
+                                "area_m2": area,
+                                "price_pln": price,
                                 "rooms": 2,
                                 "floor": None,
                                 "total_floors": 4,

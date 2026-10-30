@@ -47,21 +47,34 @@ class KurierConnector(BaseConnector):
                     continue
                 seen_texts.add(txt)
 
-                # Weryfikacja czy to ogłoszenie nieruchomości
+                # Weryfikacja czy to oferta sprzedaży nieruchomości (a nie usługa, skup lub pomoc prawna)
                 lower = txt.lower()
-                if not any(k in lower for k in ["mieszkan", "lokal", "kawaler", "pokoj", "spadek", "udział", "sprzedam", "kupię"]):
+                if any(bad in lower for bad in [
+                    "kupię", "kupie", "skup", "pomoc w", "problem z", "odkupię", "odkupie",
+                    "pożyczk", "pozyczk", "kancelar", "doradztwo", "czyszczenie zadłużeń"
+                ]):
+                    continue
+
+                if not any(k in lower for k in ["sprzedam mieszkanie", "sprzedam lokal", "sprzedam kawalerk", "sprzedam 2", "sprzedam 3", "mieszkanie do sprzedania", "bez pośredników"]):
                     continue
 
                 district = match_szczecin_district(txt)
                 
-                # Próba wyciągnięcia ceny i metrażu
+                # Próba wyciągnięcia ceny i metrażu - NIGDY nie fabrykujemy fikcyjnych liczb
                 m_price = re.search(r"(\d[\d\s]{3,})\s*(?:zł|zl|tys)", txt, re.I)
-                price = parse_pln_amount(m_price.group(1)) if m_price else 250000.0
+                if not m_price:
+                    continue
+                price = parse_pln_amount(m_price.group(1))
                 if "tys" in txt.lower() and price < 1000:
                     price = price * 1000.0
 
                 m_area = re.search(r"(\d+(?:[.,]\d+)?)\s*m(?:2|²)", txt, re.I)
-                area = float(m_area.group(1).replace(",", ".")) if m_area else 42.0
+                if not m_area:
+                    continue
+                area = float(m_area.group(1).replace(",", "."))
+
+                if price < 50000.0 or area < 15.0:
+                    continue
 
                 ext_id = f"24k-{abs(hash(txt[:50])) % 100000}"
 
