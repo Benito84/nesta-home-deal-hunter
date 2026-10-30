@@ -22,7 +22,7 @@ from app.engine.freshness_checker import verify_active_listings_batch
 scheduler = BackgroundScheduler(daemon=True)
 
 def scheduled_scraping_job():
-    """Cykliczne zadanie w tle: pobieranie ogłoszeń z Infoludka, OLX, Otodom, Gratki, Sprzedajemy, Komornika, ZBiLK, Spółdzielni, Lento i Kuriera"""
+    """Cykliczne zadanie w tle: pobieranie ogłoszeń ze zweryfikowanych źródeł Szczecina"""
     print("[Scheduler] Rozpoczynam cykliczne skanowanie źródeł Szczecina...")
     with Session(engine) as session:
         connectors = [
@@ -32,7 +32,6 @@ def scheduled_scraping_job():
             GratkaConnector(),
             SprzedajemyConnector(),
             KomornikConnector(),
-            ZbilkConnector(),
             SpoldzielnieConnector(),
             LentoConnector(),
             KurierConnector()

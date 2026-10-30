@@ -108,6 +108,10 @@ class KomornikConnector(BaseConnector):
                     start_date = item.get("startDate") or ""
                     
                     addr = item.get("address") or {}
+                    city_raw = (addr.get("city") or "").strip().lower()
+                    if city_raw and city_raw != "szczecin":
+                        continue
+
                     street_name = (addr.get("street") or "").strip()
                     building_no = (addr.get("buildingNo") or "").strip()
                     flat_no = (addr.get("flatNo") or "").strip()
@@ -157,6 +161,17 @@ class KomornikConnector(BaseConnector):
                     except Exception as de:
                         print(f"[Komornik Detail Error {notice_id}]: {de}")
 
+                    # Weryfikacja treści: bezwzględne odrzucenie udziałów, służebności, nieruchomości niemieszkalnych i obcych miast
+                    check_text = f"{title} {content_clean} {office_name}".lower()
+                    if "szczecinek" in check_text or "sąd rejonowy w szczecinku" in check_text:
+                        continue
+                    if any(k in check_text for k in ["służebność osobist", "służebnością osobist", "dożywoci", "umowa dożywocia"]):
+                        continue
+                    if any(k in check_text for k in ["udział w", "udziału w", "1/2 części", "1/2 udziału", "licytacja udziału", "ułamek nieruchomości", "współwłasność"]):
+                        continue
+                    if any(k in check_text for k in ["lokal użytkowy", "lokale użytkowe", "lokalu użytkowego", "grunty", "wieczystego gruntu", "działka", "obiekt"]):
+                        continue
+
                     # Fallback dla ceny
                     if price <= 0.0 and estimate > 0.0:
                         price = round(estimate * 0.75, 2)  # 3/4 oszacowania
@@ -166,6 +181,10 @@ class KomornikConnector(BaseConnector):
                     m_area = re.search(r"(\d+(?:[.,]\d+)?)\s*m2", f"{title} {content_clean}", re.I)
                     if m_area:
                         area = float(m_area.group(1).replace(",", "."))
+
+                    # Jeśli brak realnego metrażu lub cena zbyt niska, pomijamy
+                    if area <= 0.0 or price < 50000.0:
+                        continue
 
                     # Parsowanie pokoi
                     rooms = None
@@ -234,7 +253,7 @@ class KomornikConnector(BaseConnector):
                             "description": full_desc,
                             "district": district,
                             "street": street_full if street_full else None,
-                            "area_m2": area if area > 0 else 45.0,
+                            "area_m2": area,
                             "price_pln": price,
                             "rooms": rooms,
                             "floor": floor,

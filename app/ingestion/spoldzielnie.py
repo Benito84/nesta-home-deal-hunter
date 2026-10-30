@@ -39,6 +39,15 @@ class SpoldzielnieConnector(BaseConnector):
                         href = a["href"]
                         if "/przetargi/" in href and len(a.text.strip()) > 20:
                             raw_title = re.sub(r"\s+", " ", a.text.strip())
+                            lower_t = raw_title.lower()
+                            
+                            # Odrzucenie przetargów budowlanych, instalacyjnych, SWZ i niemieszkalnych
+                            if any(k in lower_t for k in ["remont", "wymian", "instalac", "muru", "dachu", "swz", "docieplen", "użytkow", "garaż", "konserwac"]):
+                                continue
+                            # Wymagane odniesienie do sprzedaży mieszkania / lokalu mieszkalnego
+                            if not any(k in lower_t for k in ["mieszkan", "lokal mieszkalny", "lokalu mieszkalnego", "zbyci"]):
+                                continue
+
                             full_url = href if href.startswith("http") else f"https://smsrodmiescie.szczecin.pl{href}"
                             
                             # ID przetargu
@@ -59,6 +68,9 @@ class SpoldzielnieConnector(BaseConnector):
                             if not m_price:
                                 continue
                             price = parse_pln_amount(m_price.group(1))
+
+                            if price < 130000 or area < 20:
+                                continue
 
                             results.append({
                                 "source": "spoldzielnie",
@@ -90,7 +102,11 @@ class SpoldzielnieConnector(BaseConnector):
                     for a in content_dab.find_all("a", href=True):
                         href = a["href"]
                         txt = a.text.strip()
-                        if any(k in txt.lower() or k in href.lower() for k in ["lokal", "mieszka", "przetarg"]) and not "nowe" in txt.lower() and len(txt) > 8:
+                        lower_txt = txt.lower()
+                        # Odrzucenie niemieszkalnych i wykonawczych
+                        if any(k in lower_txt for k in ["garaż", "garaz", "użytkow", "remont", "wymian", "swz", "nowe"]):
+                            continue
+                        if any(k in lower_txt for k in ["mieszka", "lokal mieszkalny", "zbycie lokalu"]) and len(txt) > 8:
                             full_url = href if href.startswith("http") else f"https://smdab.szczecin.pl{href}"
                             ext_id = f"sm-dab-{abs(hash(full_url)) % 100000}"
                             clean_t = re.sub(r"\s+", " ", txt)
@@ -103,6 +119,9 @@ class SpoldzielnieConnector(BaseConnector):
                             
                             area = float(m_area.group(1).replace(",", "."))
                             price = parse_pln_amount(m_price.group(1))
+
+                            if price < 130000 or area < 20:
+                                continue
                             
                             results.append({
                                 "source": "spoldzielnie",
@@ -134,7 +153,11 @@ class SpoldzielnieConnector(BaseConnector):
                     for a in entry.find_all("a", href=True):
                         href = a["href"]
                         txt = a.text.strip()
-                        if any(k in txt.lower() or k in href.lower() for k in ["swz", "przetarg", "lokal", "remont"]) and len(txt) > 15:
+                        lower_txt = txt.lower()
+                        # Bezwzględne odrzucenie zamówień wykonawczych, robót i SWZ
+                        if any(k in lower_txt for k in ["swz", "siwz", "remont", "wymian", "instalac", "docieplen", "muru", "garaż", "użytkow"]):
+                            continue
+                        if any(k in lower_txt for k in ["sprzedaż mieszkania", "lokal mieszkalny", "zbycie lokalu", "lokal z odzysku"]) and len(txt) > 15:
                             clean_t = re.sub(r"\s+", " ", txt)
                             district = match_szczecin_district(clean_t)
                             ext_id = f"sm-wdom-{abs(hash(href)) % 100000}"
@@ -146,6 +169,9 @@ class SpoldzielnieConnector(BaseConnector):
 
                             area = float(m_area.group(1).replace(",", "."))
                             price = parse_pln_amount(m_price.group(1))
+
+                            if price < 130000 or area < 20:
+                                continue
 
                             results.append({
                                 "source": "spoldzielnie",

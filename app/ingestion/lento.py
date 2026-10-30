@@ -95,6 +95,19 @@ class LentoConnector(BaseConnector):
                     # Dzielnica
                     district = match_szczecin_district(full_text)
 
+                    # Jeśli ogłoszenie wspomina o syndyku lub cena/m2 jest niska, pobieramy pełny opis aby zweryfikować udziały
+                    if ("syndyk" in lower_text or (price > 0 and area > 0 and price / area < 3500)) and full_url:
+                        try:
+                            detail_r = cffi_requests.get(full_url, headers=headers, impersonate="chrome124", timeout=5)
+                            if detail_r.status_code == 200:
+                                d_soup = BeautifulSoup(detail_r.text, "html.parser")
+                                d_block = d_soup.select_one(".block-description, .ad-desc, [itemprop='description']")
+                                if d_block:
+                                    full_text = f"{full_text}\n{d_block.get_text(' ', strip=True)}"
+                                    lower_text = full_text.lower()
+                        except Exception:
+                            pass
+
                     # Typ budynku
                     building_type = "Kamienica" if "kamienic" in lower_text else ("Wielka płyta" if "płyt" in lower_text else "Niski blok")
 

@@ -147,12 +147,12 @@ def seed_default_sources():
                 ),
                 ScraperSource(
                     code="zbilk",
-                    name="ZBiLK Szczecin (Mieszkania komunalne i przetargi)",
+                    name="ZBiLK Szczecin (Mieszkania komunalne)",
                     url="https://zbilk.szczecin.pl/?type=wykazy&action=view&id=32",
                     tier="Tier 1: Poza radarem",
-                    is_active=True,
-                    status="PENDING",
-                    notes="Zarząd Budynków i Lokali Komunalnych - pustostany do remontu i lokale w kamienicach Szczecina"
+                    is_active=False,
+                    status="DISABLED",
+                    notes="Zarząd Budynków i Lokali Komunalnych - program 'Mieszkanie za remont' (najem komunalny, wyłączone z profilu flipowego Nesta Home)"
                 ),
                 ScraperSource(
                     code="gratka",
