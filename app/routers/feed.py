@@ -3,7 +3,7 @@ Router Domenowy: Tablica Okazji (Feed) i Zaawansowane Filtrowanie Mieszkań.
 Zgodnie ze Standardem Architektury Nesta Home Master Tracker v4.16.
 """
 
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import HTMLResponse
@@ -30,6 +30,24 @@ AVAILABLE_SOURCES = [
     {"code": "manual", "name": "Szybka wklejka"}
 ]
 
+def parse_optional_float(val: Optional[Any]) -> Optional[float]:
+    if val is None:
+        return None
+    val_str = str(val).strip().replace(" ", "").replace(",", ".")
+    if not val_str:
+        return None
+    try:
+        f = float(val_str)
+        return f if f > 0 else None
+    except ValueError:
+        return None
+
+def parse_optional_bool(val: Optional[Any]) -> bool:
+    if val is None:
+        return False
+    val_str = str(val).strip().lower()
+    return val_str in ("true", "1", "on", "yes")
+
 @router.get("/", response_class=HTMLResponse)
 def index_view(
     request: Request,
@@ -37,21 +55,29 @@ def index_view(
     source: Optional[str] = None,
     district: Optional[str] = None,
     gate: Optional[str] = None,
-    price_min: Optional[float] = None,
-    price_max: Optional[float] = None,
-    area_min: Optional[float] = None,
-    area_max: Optional[float] = None,
+    price_min: Optional[str] = None,
+    price_max: Optional[str] = None,
+    area_min: Optional[str] = None,
+    area_max: Optional[str] = None,
     rooms: Optional[str] = None,
     building_type: Optional[str] = None,
     heating: Optional[str] = None,
-    direct_only: Optional[bool] = False,
-    has_balcony: Optional[bool] = False,
-    min_roi: Optional[float] = None,
+    direct_only: Optional[str] = None,
+    has_balcony: Optional[str] = None,
+    min_roi: Optional[str] = None,
     sort: Optional[str] = "score",
     session: Session = Depends(get_session)
 ):
     query = select(Listing).where(Listing.is_active == True)
     active_filters_count = 0
+
+    p_min = parse_optional_float(price_min)
+    p_max = parse_optional_float(price_max)
+    a_min = parse_optional_float(area_min)
+    a_max = parse_optional_float(area_max)
+    roi_min = parse_optional_float(min_roi)
+    is_direct = parse_optional_bool(direct_only)
+    is_balcony = parse_optional_bool(has_balcony)
 
     # 1. Wyszukiwanie pełnotekstowe (słowa kluczowe, ulica, tytuł)
     if q and q.strip():
@@ -83,19 +109,19 @@ def index_view(
         active_filters_count += 1
 
     # 5. Przedział cenowy
-    if price_min is not None and price_min > 0:
-        query = query.where(Listing.price_pln >= price_min)
+    if p_min is not None and p_min > 0:
+        query = query.where(Listing.price_pln >= p_min)
         active_filters_count += 1
-    if price_max is not None and price_max > 0:
-        query = query.where(Listing.price_pln <= price_max)
+    if p_max is not None and p_max > 0:
+        query = query.where(Listing.price_pln <= p_max)
         active_filters_count += 1
 
     # 6. Przedział metrażu
-    if area_min is not None and area_min > 0:
-        query = query.where(Listing.area_m2 >= area_min)
+    if a_min is not None and a_min > 0:
+        query = query.where(Listing.area_m2 >= a_min)
         active_filters_count += 1
-    if area_max is not None and area_max > 0:
-        query = query.where(Listing.area_m2 <= area_max)
+    if a_max is not None and a_max > 0:
+        query = query.where(Listing.area_m2 <= a_max)
         active_filters_count += 1
 
     # 7. Liczba pokoi
@@ -117,18 +143,18 @@ def index_view(
         active_filters_count += 1
 
     # 10. Bezpośrednie vs biuro
-    if direct_only:
+    if is_direct:
         query = query.where(Listing.has_agency_fee == False)
         active_filters_count += 1
 
     # 11. Balkon
-    if has_balcony:
+    if is_balcony:
         query = query.where(Listing.has_balcony == True)
         active_filters_count += 1
 
     # 12. Minimalny ROI
-    if min_roi is not None and min_roi > 0:
-        roi_ratio = min_roi / 100.0 if min_roi > 1.0 else min_roi
+    if roi_min is not None and roi_min > 0:
+        roi_ratio = roi_min / 100.0 if roi_min > 1.0 else roi_min
         query = query.where(Listing.roi_target >= roi_ratio)
         active_filters_count += 1
 
@@ -172,16 +198,16 @@ def index_view(
             "source": source or "ALL",
             "district": district or "ALL",
             "gate": gate or "ALL",
-            "price_min": price_min,
-            "price_max": price_max,
-            "area_min": area_min,
-            "area_max": area_max,
+            "price_min": int(p_min) if p_min and p_min.is_integer() else p_min,
+            "price_max": int(p_max) if p_max and p_max.is_integer() else p_max,
+            "area_min": int(a_min) if a_min and a_min.is_integer() else a_min,
+            "area_max": int(a_max) if a_max and a_max.is_integer() else a_max,
             "rooms": rooms or "ALL",
             "building_type": building_type or "ALL",
             "heating": heating or "ALL",
-            "direct_only": direct_only,
-            "has_balcony": has_balcony,
-            "min_roi": min_roi,
+            "direct_only": is_direct,
+            "has_balcony": is_balcony,
+            "min_roi": int(roi_min) if roi_min and roi_min.is_integer() else roi_min,
             "sort": sort or "score",
             "active_filters_count": active_filters_count
         }
