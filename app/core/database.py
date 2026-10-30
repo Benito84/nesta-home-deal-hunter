@@ -62,45 +62,51 @@ def seed_default_benchmarks():
     from app.core.calculator import DEFAULT_DISTRICT_RATES
 
     with Session(engine) as session:
-        # 1. System Prompt Directives
-        existing_setting = session.query(SystemPromptSetting).filter(SystemPromptSetting.key == "global_directives").first()
-        if not existing_setting:
-            setting = SystemPromptSetting(
-                key="global_directives",
-                custom_directives="""- Odrzucaj wszelkie ogłoszenia, które są reklamami skupu nieruchomości, pomocy prawnej, pożyczek lub zapytaniami 'kupię'.
+        # 1. System Prompt Directives (bezpieczne przy wielu workerach)
+        try:
+            existing_setting = session.query(SystemPromptSetting).filter(SystemPromptSetting.key == "global_directives").first()
+            if not existing_setting:
+                setting = SystemPromptSetting(
+                    key="global_directives",
+                    custom_directives="""- Odrzucaj wszelkie ogłoszenia, które są reklamami skupu nieruchomości, pomocy prawnej, pożyczek lub zapytaniami 'kupię'.
 - Zwracaj szczególną uwagę na oficyny i kondygnacje parterowe w kamienicach (ryzyko zawilgocenia, ciemnych podwórek i braku nasłonecznienia).
 - W przypadku ogrzewania piecami kaflowymi, traktuj to jako dźwignię do twardych negocjacji cenowych, o ile w budynku jest pion gazowy lub sieć SEC.
 - Nie akceptujemy ofert, w których przedmiotem transakcji jest tylko ułamek/udział (np. 1/2 lub 1/4 lokalu bez czystej KW).
 - Mieszkania na 4. piętrze w kamienicy lub bloku bez windy wymagają dyskonta cenowego min. 8% z uwagi na dłuższą odsprzedaż."""
-            )
-            session.add(setting)
-            session.commit()
+                )
+                session.add(setting)
+                session.commit()
+        except Exception:
+            session.rollback()
 
         # 2. Benchmarks
-        existing = session.query(DistrictBenchmark).first()
-        if not existing:
-            for district_name, rates in DEFAULT_DISTRICT_RATES.items():
-                bm = DistrictBenchmark(
-                    district=district_name,
-                    avg_renovation_m2=rates["avg_renovation_m2"],
-                    ready_min_m2=rates["ready_min_m2"],
-                    ready_avg_m2=rates["ready_avg_m2"],
-                    ready_max_m2=rates["ready_max_m2"],
-                    active=True
-                )
-                session.add(bm)
-            
-            # Wstępne Złote Zasady Nesta Home
-            default_rules = [
-                GoldenRule(rule_text="Piece kaflowe w kamienicy w Śródmieściu to nasz atut i pole do negocjacji, a nie powód do odrzucenia. Janek ma opanowaną instalację gazową/SEC.", category="heating", weight=1.2),
-                GoldenRule(rule_text="Mieszkania 38-55 m2 o układzie 2-3 pokoje mają najwyższy priorytet i najszybszą płynność (sweet spot).", category="layout", weight=1.5),
-                GoldenRule(rule_text="Mieszkania powyżej 70 m2 akceptujemy tylko przy drastycznym dyskoncie cenowym (min. 25% poniżej rynku) w topowych lokalizacjach (Pogodno, Centrum).", category="area", weight=1.0),
-                GoldenRule(rule_text="Ostatnie piętro (4. p) w kamienicy lub bloku bez windy wymaga dodatkowego dyskonta min. 8% z uwagi na dłuższą sprzedaż.", category="floor", weight=1.1)
-            ]
-            for r in default_rules:
-                session.add(r)
+        try:
+            existing = session.query(DistrictBenchmark).first()
+            if not existing:
+                for district_name, rates in DEFAULT_DISTRICT_RATES.items():
+                    bm = DistrictBenchmark(
+                        district=district_name,
+                        avg_renovation_m2=rates["avg_renovation_m2"],
+                        ready_min_m2=rates["ready_min_m2"],
+                        ready_avg_m2=rates["ready_avg_m2"],
+                        ready_max_m2=rates["ready_max_m2"],
+                        active=True
+                    )
+                    session.add(bm)
+                
+                # Wstępne Złote Zasady Nesta Home
+                default_rules = [
+                    GoldenRule(rule_text="Piece kaflowe w kamienicy w Śródmieściu to nasz atut i pole do negocjacji, a nie powód do odrzucenia. Janek ma opanowaną instalację gazową/SEC.", category="heating", weight=1.2),
+                    GoldenRule(rule_text="Mieszkania 38-55 m2 o układzie 2-3 pokoje mają najwyższy priorytet i najszybszą płynność (sweet spot).", category="layout", weight=1.5),
+                    GoldenRule(rule_text="Mieszkania powyżej 70 m2 akceptujemy tylko przy drastycznym dyskoncie cenowym (min. 25% poniżej rynku) w topowych lokalizacjach (Pogodno, Centrum).", category="area", weight=1.0),
+                    GoldenRule(rule_text="Ostatnie piętro (4. p) w kamienicy lub bloku bez windy wymaga dodatkowego dyskonta min. 8% z uwagi na dłuższą sprzedaż.", category="floor", weight=1.1)
+                ]
+                for r in default_rules:
+                    session.add(r)
 
-            session.commit()
+                session.commit()
+        except Exception:
+            session.rollback()
 
 def seed_default_sources():
     """Inicjalizuje rejestr źródeł, aktywne scrapery oraz kolejkę backlogu"""
