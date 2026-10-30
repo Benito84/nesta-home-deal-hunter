@@ -27,7 +27,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 def init_db():
     from app.models.listing import Listing, PropertyCluster, PriceDropEvent
-    from app.models.benchmarks import DistrictBenchmark, GoldenRule, UserFeedbackHistory
+    from app.models.benchmarks import DistrictBenchmark, GoldenRule, UserFeedbackHistory, SystemPromptSetting
     from app.models.source import ScraperSource
     SQLModel.metadata.create_all(engine)
     
@@ -41,6 +41,11 @@ def init_db():
             if cols and "published_at" not in cols:
                 conn.exec_driver_sql("ALTER TABLE listings ADD COLUMN published_at DATETIME")
                 conn.commit()
+
+            gr_cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(golden_rules)").fetchall()]
+            if gr_cols and "source" not in gr_cols:
+                conn.exec_driver_sql("ALTER TABLE golden_rules ADD COLUMN source VARCHAR DEFAULT 'manual'")
+                conn.commit()
         except Exception as e:
             print(f"[DB Migration Warning]: {e}")
 
@@ -52,11 +57,26 @@ def get_session():
         yield session
 
 def seed_default_benchmarks():
-    """Wypełnia domyślne benchmarki rynkowe dla Szczecina, jeśli tabela jest pusta"""
-    from app.models.benchmarks import DistrictBenchmark, GoldenRule
+    """Wypełnia domyślne benchmarki rynkowe dla Szczecina oraz dyrektywy promptu AI, jeśli tabela jest pusta"""
+    from app.models.benchmarks import DistrictBenchmark, GoldenRule, SystemPromptSetting
     from app.core.calculator import DEFAULT_DISTRICT_RATES
 
     with Session(engine) as session:
+        # 1. System Prompt Directives
+        existing_setting = session.query(SystemPromptSetting).filter(SystemPromptSetting.key == "global_directives").first()
+        if not existing_setting:
+            setting = SystemPromptSetting(
+                key="global_directives",
+                custom_directives="""- Odrzucaj wszelkie ogłoszenia, które są reklamami skupu nieruchomości, pomocy prawnej, pożyczek lub zapytaniami 'kupię'.
+- Zwracaj szczególną uwagę na oficyny i kondygnacje parterowe w kamienicach (ryzyko zawilgocenia, ciemnych podwórek i braku nasłonecznienia).
+- W przypadku ogrzewania piecami kaflowymi, traktuj to jako dźwignię do twardych negocjacji cenowych, o ile w budynku jest pion gazowy lub sieć SEC.
+- Nie akceptujemy ofert, w których przedmiotem transakcji jest tylko ułamek/udział (np. 1/2 lub 1/4 lokalu bez czystej KW).
+- Mieszkania na 4. piętrze w kamienicy lub bloku bez windy wymagają dyskonta cenowego min. 8% z uwagi na dłuższą odsprzedaż."""
+            )
+            session.add(setting)
+            session.commit()
+
+        # 2. Benchmarks
         existing = session.query(DistrictBenchmark).first()
         if not existing:
             for district_name, rates in DEFAULT_DISTRICT_RATES.items():

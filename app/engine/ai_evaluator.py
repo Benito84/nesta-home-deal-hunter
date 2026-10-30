@@ -10,7 +10,7 @@ from typing import Dict, Any, List, Optional
 from sqlmodel import Session, select
 from app.core.config import settings
 from app.models.evaluation import AIEvaluationResult, RecommendationEnum, RenovationScopeEnum
-from app.models.benchmarks import GoldenRule, UserFeedbackHistory
+from app.models.benchmarks import GoldenRule, UserFeedbackHistory, SystemPromptSetting
 from app.core.calculator import calculate_offer, DEFAULT_DISTRICT_RATES
 
 try:
@@ -22,34 +22,47 @@ except ImportError:
 
 
 def build_system_prompt(session: Session) -> str:
-    """Buduje kontekst systemowy z dynamicznym wstrzyknięciem Złotych Zasad i historii decyzji"""
+    """Buduje kontekst systemowy z dynamicznym wstrzyknięciem Złotych Zasad, wytycznych zarządu oraz historii decyzji (Active Learning)"""
     golden_rules = session.exec(select(GoldenRule).where(GoldenRule.is_active == True)).all()
     feedback_history = session.exec(
-        select(UserFeedbackHistory).order_by(UserFeedbackHistory.created_at.desc()).limit(5)
+        select(UserFeedbackHistory).order_by(UserFeedbackHistory.created_at.desc()).limit(10)
     ).all()
 
-    rules_text = "\n".join([f"- {r.rule_text}" for r in golden_rules])
-    feedback_text = "\n".join([
-        f"- Decyzja: {f.decision} | Kategoria: {f.reason_category or 'ogólna'} | Notatka: {f.comment or 'brak'}"
-        for f in feedback_history
-    ])
+    setting = session.exec(select(SystemPromptSetting).where(SystemPromptSetting.key == "global_directives")).first()
+    custom_directives = setting.custom_directives.strip() if setting and setting.custom_directives else ""
+
+    rules_text = "\n".join([f"- [{r.category.upper()}] {r.rule_text} (waga: {r.weight}x)" for r in golden_rules])
+    
+    feedback_lines = []
+    for f in feedback_history:
+        status_label = "ODRZUCONO" if f.decision == "REJECTED" else "ZAAKCEPTOWANO NA OGLĘDZINY"
+        cat = f" [Kategoria: {f.reason_category}]" if f.reason_category else ""
+        note = f" -> Uwaga inwestora: \"{f.comment}\"" if f.comment else ""
+        feedback_lines.append(f"- Oferta #{f.listing_id}: {status_label}{cat}{note}")
+    feedback_text = "\n".join(feedback_lines)
 
     return f"""Jesteś Głównym Analitykiem Inwestycyjnym w spółce Nesta Home (nestahome.pl) w Szczecinie.
 Firma zajmuje się profesjonalnym flippingiem mieszkań na rynku wtórnym, rewitalizacją lokali oraz kamienic w Szczecinie.
 
 PROFIL INWESTYCYJNY NESTA HOME:
-1. Sweet Spot: 38-55 m2 (2 do 3 pokoi) - wysoka płynność po wykończeniu pod klucz w podwyższonym standardzie.
+1. Sweet Spot: 38-55 m2 (2 do 3 pokoi) - najwyższa płynność po wykończeniu pod klucz w podwyższonym standardzie.
 2. Segment uzupełniający: 25-35 m2 (szybki obrót kapitałem).
-3. OGRZEWANIE - KLUCZOWA ZASADA: Piece kaflowe w kamienicach to nasz NAJWIĘKSZY ATUT! Zwykli klienci ich unikają, co pozwala drastycznie zbić cenę zakupu (np. do 4500-6000 zł/m2 w Śródmieściu). Nasz Kierownik Budowy Janek ma opanowaną instalację gazową z kotłem 2-f kondensacyjnym lub wpięcie do miejskiej sieci SEC. NIE ODRZUCAJ ofert z piecami kaflowymi - traktuj je jako okazję do negocjacji!
+3. OGRZEWANIE - KLUCZOWA ZASADA: Piece kaflowe w kamienicach to nasz NAJWIĘKSZY ATUT! Zwykli klienci ich unikają, co pozwala drastycznie zbić cenę zakupu (np. do 4500-6000 zł/m2 w Śródmieściu). Nasz Kierownik Budowy Janek ma opanowaną instalację gazową z kotłem 2-f kondensacyjnym lub wpięcie do miejskiej sieci SEC. NIE ODRZUCAJ ofert z piecami kaflowymi - traktuj je jako pole do negocjacji!
 4. Finanse: Minimalny ROI to 16%, a minimalny czysty zysk to 30 000 - 40 000 zł.
 5. Standard remontu Nesta: Kamienica 1900 zł/m2, blok 1700 zł/m2, nowe 1500 zł/m2.
 6. Nie robimy mikrokawalerek dla studentów - robimy piękne, funkcjonalne mieszkania dla rodzin/singli/inwestorów.
 
+DODATKOWE WYTYCZNE INWESTYCYJNE ZARZĄDU (SYSTEM DIRECTIVES):
+{custom_directives if custom_directives else "- Brak dodatkowych dyrektyw"}
+
 AKTYWNE ZŁOTE ZASADY ZESPOŁU NESTA HOME:
 {rules_text if rules_text else "- Standardowe wytyczne inwestycyjne Szczecin"}
 
-OSTATNIE DECYZJE ZESPOŁU (FEEDBACK LOOP):
+PAMIĘĆ AKTYWNEGO UCZENIA (OSTATNIE DECYZJE I POWODY ODRZUCEŃ ZESPOŁU):
 {feedback_text if feedback_text else "- Brak wcześniejszych odrzuceń."}
+
+DYREKTYWA SAMOUCZENIA:
+Powyższe decyzje zespołu to Twoje wzorce referencyjne. Jeśli oceniane ogłoszenie wykazuje te same wady lub cechy, które zespół odrzucił w przeszłości (np. reklama usługi, ułamek udziału, brak KW, wada techniczna, ciemna oficyna), musisz bezwzględnie obniżyć Deal Score lub zarekomendować REJECT i wpisać wykryte ryzyko w pole 'red_flags'.
 
 Twoim zadaniem jest ocenić nadesłaną ofertę i zwrócić zwięzłą, rzetelną ocenę w formacie JSON zgodnym ze schematem."""
 

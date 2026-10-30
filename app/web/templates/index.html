@@ -512,11 +512,11 @@
 
                 <div class="flex items-center space-x-2">
                     <!-- Feedback Loop Buttons -->
-                    <button @click="sendFeedback({{ item.id }}, 'INTERESTED')" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
+                    <button @click="openFeedbackModal({{ item.id }}, {{ item.title|tojson }}, 'INTERESTED')" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
                         <i class="fa-solid fa-check text-emerald-600 mr-1"></i>Oględziny
                     </button>
-                    <button @click="sendFeedback({{ item.id }}, 'REJECTED')" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
-                        <i class="fa-solid fa-xmark text-red-600 mr-1"></i>Odrzuć
+                    <button @click="openFeedbackModal({{ item.id }}, {{ item.title|tojson }}, 'REJECTED')" class="px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition">
+                        <i class="fa-solid fa-xmark mr-1"></i>Odrzuć
                     </button>
 
                     <!-- Send to Nesta Master Tracker Button -->
@@ -537,6 +537,97 @@
         {% endfor %}
     </div>
 
+    <!-- Modal: Uczenie AI i Feedback Inwestora -->
+    <div x-show="feedbackModal.open" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+         style="display: none;"
+         @keydown.escape.window="closeFeedbackModal()">
+        
+        <div class="bg-white rounded-2xl border border-sand-300 shadow-xl max-w-lg w-full p-6 space-y-4"
+             @click.away="closeFeedbackModal()">
+            
+            <div class="flex items-start justify-between border-b border-sand-200 pb-3">
+                <div>
+                    <h3 class="font-serif text-lg font-bold text-stone-950" 
+                        x-text="feedbackModal.decision === 'REJECTED' ? 'Odrzucenie oferty i uczenie AI' : 'Kwalifikacja do oględzin'"></h3>
+                    <p class="text-xs text-stone-600 mt-0.5"
+                       x-text="feedbackModal.decision === 'REJECTED' ? 'Podaj powód – model AI zapamięta tę decyzję przy analizie kolejnych ogłoszeń.' : 'Dodaj notatkę inwestorską do weryfikacji w terenie.'"></p>
+                </div>
+                <button type="button" @click="closeFeedbackModal()" class="text-stone-400 hover:text-stone-700 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Preview oferty -->
+            <div class="p-3 bg-sand-50 rounded-xl border border-sand-200 text-xs">
+                <span class="text-[10px] uppercase font-bold text-stone-500 tracking-wider block mb-1">Wybrana oferta:</span>
+                <p class="font-bold text-stone-900 truncate" x-text="feedbackModal.listingTitle"></p>
+            </div>
+
+            <!-- Formularz odrzucenia -->
+            <template x-if="feedbackModal.decision === 'REJECTED'">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-stone-800 uppercase tracking-wider mb-1">Główny powód odrzucenia</label>
+                        <select x-model="feedbackModal.reasonCategory" class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl p-2.5 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                            <option value="REKLAMA_USLUGA">🚫 Reklama usługi / skup mieszkań / pomoc prawna / pożyczki</option>
+                            <option value="WADA_PRAWNA">⚖️ Wada prawna (udział ułamkowy, licytacja ułamka, brak KW, zadłużenie)</option>
+                            <option value="WADA_TECHNICZNA">🏚️ Wada techniczna (stropy ugięte, zawilgocenie, ciemna oficyna studnia)</option>
+                            <option value="CENA_ZAWYZONA">📉 Zawyżona cena (brak marginesu na remont, brak dyskontu)</option>
+                            <option value="LOKALIZACJA_ZLA">📍 Zła lokalizacja (hałaśliwa ulica, parter przy torach, peryferia)</option>
+                            <option value="UKLAD_ZLY">📐 Zły układ lokalu (brak możliwości wydzielenia 2-3 pokoi)</option>
+                            <option value="INNE">📝 Inny powód biznesowy</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-stone-800 uppercase tracking-wider mb-1">Komentarz i uzasadnienie inwestora</label>
+                        <textarea x-model="feedbackModal.comment" rows="3" placeholder="np. Na tej ulicy oficyny w głębi podwórza są ciemne i wilgotne, wyjście na ARV nierealne..." class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl p-3 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none"></textarea>
+                    </div>
+
+                    <!-- Checkbox promocji do Złotej Zasady -->
+                    <label class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/70 border border-amber-200 cursor-pointer">
+                        <input type="checkbox" x-model="feedbackModal.promoteToRule" class="rounded border-amber-300 text-amber-700 focus:ring-amber-600 mt-0.5">
+                        <span class="text-xs text-stone-800 leading-snug">
+                            <strong class="font-bold text-amber-900 block">Promuj do stałej Złotej Zasady AI</strong>
+                            AI zapamięta ten komentarz jako oficjalną regułę inwestycyjną i będzie stosować przy każdym kolejnym skanowaniu rynku.
+                        </span>
+                    </label>
+                </div>
+            </template>
+
+            <!-- Formularz oględzin -->
+            <template x-if="feedbackModal.decision === 'INTERESTED'">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-stone-800 uppercase tracking-wider mb-1">Notatka do oględzin (opcjonalnie)</label>
+                        <textarea x-model="feedbackModal.comment" rows="3" placeholder="np. Sprawdzić stan pionów wod-kan, wysokość sufitów i możliwość zrobienia aneksu..." class="w-full text-xs bg-sand-50 border border-sand-300 rounded-xl p-3 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none"></textarea>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Przyciski akcji -->
+            <div class="pt-3 border-t border-sand-200 flex items-center justify-end gap-3">
+                <button type="button" @click="closeFeedbackModal()" class="px-4 py-2 rounded-xl border border-sand-300 text-xs font-semibold text-stone-700 hover:bg-sand-100 transition">
+                    Anuluj
+                </button>
+                <button type="button" @click="submitFeedbackModal()" :disabled="feedbackModal.submitting" 
+                        class="px-5 py-2 rounded-xl text-xs font-bold text-white transition shadow-xs flex items-center gap-1.5"
+                        :class="feedbackModal.decision === 'REJECTED' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700'">
+                    <i class="fa-solid fa-spinner fa-spin mr-1" x-show="feedbackModal.submitting"></i>
+                    <span x-text="feedbackModal.decision === 'REJECTED' ? 'Odrzuć i naucz AI' : 'Zatwierdź oględziny'"></span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
 </div>
 {% endblock %}
 
@@ -548,6 +639,66 @@
             syncingId: null,
             checkingId: null,
             showAdvanced: {{ 'true' if (price_min is not none or price_max is not none or area_min is not none or area_max is not none or (rooms and rooms != 'ALL') or (building_type and building_type != 'ALL') or (heating and heating != 'ALL') or direct_only or has_balcony or min_roi) else 'false' }},
+
+            feedbackModal: {
+                open: false,
+                listingId: null,
+                listingTitle: '',
+                decision: 'REJECTED',
+                reasonCategory: 'REKLAMA_USLUGA',
+                comment: '',
+                promoteToRule: false,
+                submitting: false
+            },
+
+            openFeedbackModal(listingId, listingTitle, decision) {
+                this.feedbackModal.open = true;
+                this.feedbackModal.listingId = listingId;
+                this.feedbackModal.listingTitle = listingTitle || ('Oferta #' + listingId);
+                this.feedbackModal.decision = decision;
+                this.feedbackModal.reasonCategory = decision === 'REJECTED' ? 'REKLAMA_USLUGA' : '';
+                this.feedbackModal.comment = '';
+                this.feedbackModal.promoteToRule = false;
+                this.feedbackModal.submitting = false;
+            },
+
+            closeFeedbackModal() {
+                this.feedbackModal.open = false;
+            },
+
+            async submitFeedbackModal() {
+                if (this.feedbackModal.submitting) return;
+
+                const form = new FormData();
+                form.append('decision', this.feedbackModal.decision);
+                if (this.feedbackModal.reasonCategory) {
+                    form.append('reason_category', this.feedbackModal.reasonCategory);
+                }
+                if (this.feedbackModal.comment) {
+                    form.append('comment', this.feedbackModal.comment);
+                }
+                form.append('promote_to_rule', this.feedbackModal.promoteToRule ? 'true' : 'false');
+
+                this.feedbackModal.submitting = true;
+                try {
+                    const resp = await fetch(`/api/v1/listings/${this.feedbackModal.listingId}/feedback`, {
+                        method: 'POST',
+                        body: form
+                    });
+                    const res = await resp.json();
+                    if (res.status === 'success') {
+                        alert(res.message);
+                        window.location.reload();
+                    } else {
+                        alert(res.message || 'Błąd zapisu');
+                    }
+                } catch (e) {
+                    alert('Błąd zapisu feedbacku: ' + e);
+                } finally {
+                    this.feedbackModal.submitting = false;
+                    this.closeFeedbackModal();
+                }
+            },
 
             async triggerScrape() {
                 this.scraping = true;
@@ -583,24 +734,6 @@
                     alert('Błąd komunikacji z Master Trackerem: ' + e);
                 } finally {
                     this.syncingId = null;
-                }
-            },
-
-            async sendFeedback(listingId, decision) {
-                const comment = prompt(decision === 'INTERESTED' ? 'Notatka do oględzin (opcjonalnie):' : 'Powód odrzucenia (np. stan stropów, ciemna oficyna):');
-                if (comment === null && decision === 'REJECTED') return;
-
-                const form = new FormData();
-                form.append('decision', decision);
-                if (comment) form.append('comment', comment);
-
-                try {
-                    const resp = await fetch(`/api/v1/listings/${listingId}/feedback`, { method: 'POST', body: form });
-                    const res = await resp.json();
-                    alert(res.message);
-                    window.location.reload();
-                } catch (e) {
-                    alert('Błąd zapisu feedbacku: ' + e);
                 }
             },
 
