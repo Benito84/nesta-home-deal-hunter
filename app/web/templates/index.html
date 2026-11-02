@@ -149,6 +149,15 @@
                         </div>
                     </div>
 
+                    <!-- Cena za m² od / do -->
+                    <div>
+                        <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Cena za m² (PLN/m²)</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" step="100" name="price_m2_min" value="{{ price_m2_min if price_m2_min is not none else '' }}" placeholder="Od (zł/m²)" class="text-xs bg-sand-50 border border-sand-300 rounded-xl px-2.5 py-1.5 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                            <input type="number" step="100" name="price_m2_max" value="{{ price_m2_max if price_m2_max is not none else '' }}" placeholder="Do (zł/m²)" class="text-xs bg-sand-50 border border-sand-300 rounded-xl px-2.5 py-1.5 text-stone-900 focus:ring-2 focus:ring-stone-950 focus:outline-none">
+                        </div>
+                    </div>
+
                     <!-- Metraż od / do -->
                     <div>
                         <label class="text-[11px] uppercase font-bold tracking-wider text-stone-600 block mb-1">Metraż (m²)</label>
@@ -671,7 +680,7 @@
             syncingId: null,
             checkingId: null,
             syncedMap: {},
-            showAdvanced: {{ 'true' if (price_min is not none or price_max is not none or area_min is not none or area_max is not none or (rooms and rooms != 'ALL') or (building_type and building_type != 'ALL') or (heating and heating != 'ALL') or direct_only or has_balcony or min_roi) else 'false' }},
+            showAdvanced: {{ 'true' if (price_min is not none or price_max is not none or price_m2_min is not none or price_m2_max is not none or area_min is not none or area_max is not none or (rooms and rooms != 'ALL') or (building_type and building_type != 'ALL') or (heating and heating != 'ALL') or direct_only or has_balcony or min_roi) else 'false' }},
 
             feedbackModal: {
                 open: false,

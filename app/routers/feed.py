@@ -57,6 +57,8 @@ def index_view(
     gate: Optional[str] = None,
     price_min: Optional[str] = None,
     price_max: Optional[str] = None,
+    price_m2_min: Optional[str] = None,
+    price_m2_max: Optional[str] = None,
     area_min: Optional[str] = None,
     area_max: Optional[str] = None,
     rooms: Optional[str] = None,
@@ -73,6 +75,8 @@ def index_view(
 
     p_min = parse_optional_float(price_min)
     p_max = parse_optional_float(price_max)
+    pm2_min = parse_optional_float(price_m2_min)
+    pm2_max = parse_optional_float(price_m2_max)
     a_min = parse_optional_float(area_min)
     a_max = parse_optional_float(area_max)
     roi_min = parse_optional_float(min_roi)
@@ -114,6 +118,14 @@ def index_view(
         active_filters_count += 1
     if p_max is not None and p_max > 0:
         query = query.where(Listing.price_pln <= p_max)
+        active_filters_count += 1
+
+    # 5b. Przedział ceny za m²
+    if pm2_min is not None and pm2_min > 0:
+        query = query.where(Listing.price_per_m2 >= pm2_min)
+        active_filters_count += 1
+    if pm2_max is not None and pm2_max > 0:
+        query = query.where(Listing.price_per_m2 <= pm2_max)
         active_filters_count += 1
 
     # 6. Przedział metrażu
@@ -200,6 +212,8 @@ def index_view(
             "gate": gate or "ALL",
             "price_min": int(p_min) if p_min and p_min.is_integer() else p_min,
             "price_max": int(p_max) if p_max and p_max.is_integer() else p_max,
+            "price_m2_min": int(pm2_min) if pm2_min and pm2_min.is_integer() else pm2_min,
+            "price_m2_max": int(pm2_max) if pm2_max and pm2_max.is_integer() else pm2_max,
             "area_min": int(a_min) if a_min and a_min.is_integer() else a_min,
             "area_max": int(a_max) if a_max and a_max.is_integer() else a_max,
             "rooms": rooms or "ALL",
