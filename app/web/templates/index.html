@@ -123,9 +123,13 @@
                         <i class="fa-solid fa-filter"></i>
                         <span>Filtruj</span>
                     </button>
-                    <button type="button" @click="showAdvanced = !showAdvanced" class="bg-sand-100 hover:bg-sand-200 text-stone-850 text-xs font-bold py-2 px-3 rounded-xl transition border border-sand-300 flex items-center gap-1.5" title="Rozwiń filtry zaawansowane">
-                        <i class="fa-solid fa-sliders"></i>
-                        <span class="hidden xl:inline">Więcej</span>
+                    <button type="button" 
+                            @click="showAdvanced = !showAdvanced" 
+                            :class="showAdvanced ? 'bg-sand-300 border-stone-400 text-stone-950 shadow-inner' : 'bg-sand-100 hover:bg-sand-200 text-stone-850 border-sand-300'"
+                            class="text-xs font-bold py-2 px-3 rounded-xl transition border flex items-center gap-1.5 cursor-pointer" 
+                            title="Rozwiń filtry zaawansowane">
+                        <i class="fa-solid fa-sliders transition-transform duration-200" :class="showAdvanced ? 'rotate-90 text-stone-950' : 'text-stone-600'"></i>
+                        <span class="inline">Więcej</span>
                         {% if active_filters_count > 0 %}
                         <span class="bg-amber-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center font-bold">{{ active_filters_count }}</span>
                         {% endif %}
@@ -134,7 +138,7 @@
             </div>
 
             <!-- Panel Zaawansowanych Filtrów (Rozwijany) -->
-            <div x-show="showAdvanced" x-transition.duration.200ms class="mt-4 pt-4 border-t border-sand-200" style="display: none;">
+            <div x-show="showAdvanced" x-cloak x-transition.duration.200ms class="mt-4 pt-4 border-t border-sand-200">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Cena od / do -->
                     <div>
@@ -793,7 +797,6 @@
                 } finally {
                     this.syncingId = null;
                 }
-            },
             },
 
             async checkFreshness(listingId) {
