@@ -15,7 +15,8 @@ class GratkaConnector(BaseConnector):
         return "gratka"
 
     def fetch_listings(self) -> List[Dict[str, Any]]:
-        url = "https://gratka.pl/nieruchomosci/mieszkania/szczecin/sprzedaz?sort=created_at:desc"
+        # Filtrujemy do maksymalnie 600 000 PLN bezpośrednio w zapytaniu do Gratka
+        url = "https://gratka.pl/nieruchomosci/mieszkania/szczecin/sprzedaz?cena-calkowita:do=600000&sort=created_at:desc"
         results = []
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",

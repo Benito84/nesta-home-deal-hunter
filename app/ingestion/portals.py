@@ -15,7 +15,8 @@ class PortalsConnector(BaseConnector):
 
     def fetch_listings(self) -> List[Dict[str, Any]]:
         results = []
-        url = "https://www.olx.pl/nieruchomosci/mieszkania/sprzedaz/szczecin/?search%5Border%5D=created_at%3Adesc"
+        # Filtrujemy do maksymalnie 600 000 PLN bezpośrednio w zapytaniu do OLX
+        url = "https://www.olx.pl/nieruchomosci/mieszkania/sprzedaz/szczecin/?search%5Bfilter_float_price%3Ato%5D=600000&search%5Border%5D=created_at%3Adesc"
 
         try:
             # Używamy impersonacji TLS Chrome 124 (omijanie Cloudflare 403)

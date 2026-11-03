@@ -31,7 +31,8 @@ class OtodomConnector(BaseConnector):
         return "otodom"
 
     def fetch_listings(self) -> List[Dict[str, Any]]:
-        url = "https://www.otodom.pl/pl/wyniki/sprzedaz/mieszkanie/zachodniopomorskie/szczecin/szczecin/szczecin?limit=36&ownerTypeSingleSelect=ALL&by=LATEST&direction=DESC"
+        # Filtrujemy do maksymalnie 600 000 PLN bezpośrednio w zapytaniu do Otodom
+        url = "https://www.otodom.pl/pl/wyniki/sprzedaz/mieszkanie/zachodniopomorskie/szczecin/szczecin/szczecin?limit=36&ownerTypeSingleSelect=ALL&priceMax=600000&by=LATEST&direction=DESC"
         results = []
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",

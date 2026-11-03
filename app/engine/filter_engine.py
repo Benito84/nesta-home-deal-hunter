@@ -125,6 +125,10 @@ def pre_filter_listing(
     if not is_auction and price_pln < 130000.0:
         return False, f"Podejrzenie ogłoszenia o wynajem, udziału lub błędu ceny ({price_pln:,.0f} zł < 130 000 zł)"
 
+    # Maksymalny budżet zakupu mieszkania Nesta Home Szczecin (twardy limit 600 000 zł)
+    if price_pln > 600000.0:
+        return False, f"Odrzucono: Cena zakupu {price_pln:,.0f} zł przekracza maksymalny dopuszczalny budżet Nesta Home (600 000 zł)"
+
     # Skrajnie niska cena za m2 na portalach otwartych (< 3500 zł/m2) to w 99% udział ułamkowy, błąd lub scam
     price_m2 = price_pln / area_m2
     if not is_auction and price_m2 < 3500.0:

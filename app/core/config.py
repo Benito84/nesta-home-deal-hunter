@@ -52,6 +52,7 @@ class Settings:
     # Kryteria inwestycyjne Nesta Home Szczecin
     DEFAULT_MIN_ROI: float = float(os.getenv("DEFAULT_MIN_ROI", "0.16"))
     MIN_NET_PROFIT_PLN: float = float(os.getenv("MIN_NET_PROFIT_PLN", "30000.0"))
+    MAX_PURCHASE_PRICE_PLN: float = float(os.getenv("MAX_PURCHASE_PRICE_PLN", "600000.0"))
     SWEET_SPOT_MIN_M2: float = 38.0
     SWEET_SPOT_MAX_M2: float = 55.0
     QUICK_FLIP_MIN_M2: float = 25.0
