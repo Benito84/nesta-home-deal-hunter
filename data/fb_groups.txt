@@ -1,6 +1,38 @@
-# Lista monitorowanych grup Facebook w Szczecinie (1 link na linię)
-# Możesz dodawać kolejne linki do grup z rynku wtórnego i bez pośredników
-https://www.facebook.com/groups/mieszkaniaszczecin/
-https://www.facebook.com/groups/nieruchomosci.szczecin/
-https://www.facebook.com/groups/szczecin.mieszkania/
-https://www.facebook.com/groups/157256194451000/
+# ==============================================================================
+# MONITOROWANE GRUPY FACEBOOK DLA NESTA DEAL HUNTER (KONTO: B.ART SMART HOME)
+# Łącznie 30 grup szczecińskich
+# ==============================================================================
+
+# --- KATEGORIA 1: NIERUCHOMOŚCI I MIESZKANIA SZCZECIN (BEZPOŚREDNIO & OFF-MARKET) ---
+https://www.facebook.com/groups/816374953729581/  # NIERUCHOMOŚCI SZCZECIN OFF MARKET
+https://www.facebook.com/groups/1654452844583344/ # kupno, sprzedaż, wynajem nieruchomości bez pośredników szczecin
+https://www.facebook.com/groups/619830191803121/  # Sprzedam mieszkanie - Szczecin, Police - bezpośrednio
+https://www.facebook.com/groups/149639275885323/  # Mieszkania Szczecin
+https://www.facebook.com/groups/2217762418461254/ # Mieszkanie Szczecin
+https://www.facebook.com/groups/265144983644555/  # NIERUCHOMOŚCI SZCZECIN
+https://www.facebook.com/groups/447848112082515/  # Nieruchomości Szczecin
+https://www.facebook.com/groups/1033159440779379/ # SZCZECIN NIERUCHOMOŚCI kupno/sprzedaż/wynajem
+https://www.facebook.com/groups/1376346619326361/ # SZCZECIN NIERUCHOMOŚCI - sprzedaż & wynajem
+https://www.facebook.com/groups/mieszkaniadomyszczecin/ # SZCZECIN NIERUCHOMOŚCI - sprzedaż, kupno i wynajem
+https://www.facebook.com/groups/219557512125704/ # SZCZECIN GIEŁDA NIERUCHOMOŚCI SPRZEDAM, KUPIĘ, ZAMIENIĘ, WYNAJMĘ, SZUKAM
+https://www.facebook.com/groups/3905132119565582/ # NIERUCHOMOŚCI SZCZECIN - SPRZEDAM/KUPIE/WYNAJMĘ
+https://www.facebook.com/groups/znajdzmieszkanieszczecin/ # Szczecin Nieruchomości: Kup, Sprzedaj, Znajdź Swoje Mieszkanie
+https://www.facebook.com/groups/657131864379462/  # Nieruchomości po znajomości 😊
+https://www.facebook.com/groups/789718001215742/  # Szczecin nieruchomości po znajomości pokój/mieszkanie/dom
+https://www.facebook.com/groups/305837565085193/  # Galeria Ofert Nieruchomości Szczecin
+https://www.facebook.com/groups/1444368675670862/ # Gratka Nieruchomości - sprzedaż | wynajem
+https://www.facebook.com/groups/1240921233522946/ # Nieruchomości warte polecenia - Szczecin, Goleniów, Stargard, Police.
+https://www.facebook.com/groups/315820959814888/  # Zachodniopomorska Baza Nieruchomości - sprzedam, kupię, wynajmę, szukam
+https://www.facebook.com/groups/1942109619150926/ # Najlepsze nieruchomości - Pomorze Zachodnie
+
+# --- KATEGORIA 2: TABLICE OGŁOSZEŃ I HANDEL LOKALNY SZCZECIN ---
+https://www.facebook.com/groups/212997245980695/  # SZCZECIN KUPIĘ/ZAMIENIĘ /SPRZEDAM
+https://www.facebook.com/groups/Szczecinpolicesprzedamkupie/ # Szczecin, Police i okolice - SPRZEDAM, KUPIĘ, SZUKAM, ZLĘCĘ, ODDAM, PRZYJMĘ
+https://www.facebook.com/groups/1291060734752825/ # Ogłoszenia Szczecin & Okolice
+https://www.facebook.com/groups/bazarekszczecin/  # Ogłoszenia Szczecin i okolice
+https://www.facebook.com/groups/1733927706910975/ # Ogłoszenia Szczecin
+https://www.facebook.com/groups/ogloszenia24.szczecin/ # Ogłoszenia Szczecin
+https://www.facebook.com/groups/szczecin.ogloszenia.bez.spamu/ # Szczecin Zachodniopomorskie Ogloszenia
+https://www.facebook.com/groups/szczecinmiasto/   # SZCZECIN OGŁOSZENIA
+https://www.facebook.com/groups/680423855414985/  # Szczecin - Ogłoszenia KUPNO / SPRZEDAŻ / REKLAMA
+https://www.facebook.com/groups/uslugiszczecin/   # OGŁOSZENIA / USŁUGI SZCZECIN ☀️
