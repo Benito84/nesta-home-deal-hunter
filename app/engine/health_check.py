@@ -167,25 +167,33 @@ def test_source_health(source: ScraperSource, session: Session) -> Dict[str, Any
                     message = f"Błąd logowania do skrzynki IMAP: {ie}"
 
         elif source.code == "facebook":
-            if not settings.APIFY_API_TOKEN:
+            conn = FacebookConnector()
+            cookies = conn.load_cookies_dict()
+            if not cookies:
                 status = "WARNING"
-                message = "Brak klucza APIFY_API_TOKEN w pliku .env. Uzupełnij klucz, aby aktywować scraping grup."
+                message = "Brak pliku data/fb_cookies.json. Wgraj ciasteczka, aby aktywować scraping grup."
                 latency_ms = 0
             else:
-                with httpx.Client(timeout=10.0) as client:
-                    resp = client.get(f"https://api.apify.com/v2/users/me?token={settings.APIFY_API_TOKEN}")
+                try:
+                    from curl_cffi import requests as curl_requests
+                    test_url = "https://www.facebook.com/groups/joins/"
+                    headers = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                        "Accept-Language": "pl-PL,pl;q=0.9",
+                    }
+                    resp = curl_requests.get(test_url, cookies=cookies, headers=headers, impersonate="chrome120", timeout=10)
                     latency_ms = int((time.perf_counter() - start_time) * 1000)
+                    groups_count = len(conn.get_configured_group_urls())
                     if resp.status_code == 200:
-                        uname = resp.json().get("data", {}).get("username", "użytkownik")
-                        conn = FacebookConnector()
-                        cookies = conn.load_cookies()
-                        cookies_status = f"załadowano ({len(cookies)} ciasteczek)" if cookies else "brak pliku cookies (tylko grupy publiczne)"
-                        groups_count = len(conn.get_configured_group_urls())
                         status = "HEALTHY"
-                        message = f"Klucz Apify aktywny (konto: {uname}). Monitorowanych grup: {groups_count}. Ciasteczka FB: {cookies_status}."
+                        message = f"Bezpośrednie połączenie Stealth (B.ART SMART HOME). Aktywne ciasteczka ({len(cookies)}). Monitorowanych grup: {groups_count}."
                     else:
-                        status = "ERROR"
-                        message = f"Nieprawidłowy token Apify (kod HTTP {resp.status_code}): {resp.text[:120]}"
+                        status = "WARNING"
+                        message = f"Facebook zwrócił kod HTTP {resp.status_code}. Sprawdź ważność sesji ciasteczek."
+                except Exception as fe:
+                    latency_ms = int((time.perf_counter() - start_time) * 1000)
+                    status = "ERROR"
+                    message = f"Błąd połączenia z Facebookiem: {fe}"
 
         else:
             # Test źródła z kolejki / dowolnego adresu URL

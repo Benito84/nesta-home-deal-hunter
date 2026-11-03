@@ -35,8 +35,10 @@ def scheduled_scraping_job():
             KomornikConnector(),
             SpoldzielnieConnector(),
             LentoConnector(),
-            KurierConnector(),
-            FacebookConnector()
+            KurierConnector()
+            # FacebookConnector() wyłączony z automatycznego schedulera 30-minutowego,
+            # aby uniknąć opłat per-event na Apify przy 30 grupach.
+            # Wyzwalany ręcznie w zakładce /sources lub przez dedykowany darmowy scraper.
         ]
         items = []
         for conn in connectors:
