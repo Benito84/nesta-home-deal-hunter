@@ -5,6 +5,7 @@ Zapewnia bezpieczne pobieranie ofert z grup Facebooka bez ryzyka bana dla konta 
 Wspiera ciasteczka sesyjne dla grup prywatnych oraz automatyczną ekstrakcję encji AI (Gemini).
 """
 
+import re
 import json
 import logging
 from pathlib import Path
@@ -133,26 +134,52 @@ class FacebookConnector(BaseConnector):
                 if len(post_text) < 25:
                     continue
 
-                # Odrzucamy posty typu "szukam", "kupię", "poszukuję", "wynajmę"
                 lower_text = post_text.lower()
-                if any(w in lower_text for w in ["szukam mieszkania", "poszukuję mieszkania", "kupię mieszkanie", "wynajmę", "do wynajęcia"]):
+
+                # 1. Odrzucenie oczywistych postów niezwiązanych z nieruchomościami
+                if any(w in lower_text for w in ["manicure", "pedicure", "paznokci", "korepetycje", "volvo", "nissan", "audi", "bmw", "opel"]):
                     continue
 
-                post_url = item.get("url") or item.get("postUrl")
+                # 2. Odrzucenie zapytań poszukujących ("szukam", "kupię")
+                title_lower = (item.get("title") or "").lower()
+                if any(w in title_lower for w in ["kupię", "kupie", "szukam", "poszukuję", "poszukuje"]):
+                    continue
+                if any(lower_text.startswith(p) for p in ["poszukuj", "szukam", "kupi", "chętnie kupi", "chętnie poszukuj"]):
+                    continue
+                if any(w in lower_text for w in ["szukam mieszkania", "poszukuję mieszkania", "kupię mieszkanie", "chętnie kupię"]):
+                    if not ("sprzedam" in lower_text or "na sprzedaż" in lower_text):
+                        continue
+
+                # 3. Weryfikacja ogłoszeń najmu vs sprzedaży
+                raw_apify_price = item.get("price") or ""
+                price_digits = re.sub(r'[^\d]', '', str(raw_apify_price))
+                apify_price_val = float(price_digits) if price_digits else None
+
+                is_explicit_sale = any(w in lower_text for w in ["na sprzedaż", "sprzedam", "sprzedaży", "własnościowe", "do sprzedaży"])
+                is_rental = any(w in lower_text for w in ["do wynajęcia", "wynajmę", "odstąpię najem", "pokój do wynajęcia"])
+
+                if is_rental and not is_explicit_sale:
+                    # Jeśli cena z Apify to np. 2300 PLN (czynsz najmu), odrzucamy
+                    if apify_price_val and apify_price_val < 40000:
+                        continue
+                    elif not apify_price_val:
+                        continue
+
+                post_url = item.get("url") or item.get("postUrl") or item.get("facebookUrl")
                 if not post_url and item.get("id"):
                     post_url = f"https://www.facebook.com/groups/post/{item.get('id')}"
 
                 # Ekstrakcja parametrów oferty za pomocą Smart Extractor (AI / Heurystyki)
                 extracted, _ = smart_extract_listing(raw_text=post_text)
 
-                price_pln = extracted.get("price_pln")
+                price_pln = extracted.get("price_pln") or apify_price_val
                 area_m2 = extracted.get("area_m2")
 
-                # Post musi zawierać przynajmniej cenę lub metraż, by kwalifikować się do kalkulatora
-                if not price_pln or price_pln <= 0:
+                # Post musi zawierać przynajmniej cenę sprzedaży mieszkania (> 40 000 zł)
+                if not price_pln or price_pln < 40000:
                     continue
 
-                title = extracted.get("title") or post_text[:75].strip()
+                title = extracted.get("title") or item.get("title") or post_text[:75].strip()
                 if not title.startswith("[FB]"):
                     title = f"[FB Grupy] {title}"
 

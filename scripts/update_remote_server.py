@@ -30,8 +30,22 @@ def run_cmd(cmd):
         print(f"EXIT CODE: {code}")
     return out
 
+import re
+
 # 1. Git pull
 run_cmd("cd /opt/nesta-deal-hunter && git pull origin main")
+
+# 1b. Sync APIFY_API_TOKEN from local .env to remote .env
+local_env = Path(".env").read_text(encoding="utf-8") if Path(".env").exists() else ""
+token_match = re.search(r'APIFY_API_TOKEN=([^\r\n]+)', local_env)
+if token_match:
+    token_val = token_match.group(1).strip()
+    token_check = run_cmd("grep -q 'APIFY_API_TOKEN' /opt/nesta-deal-hunter/.env && echo 'FOUND' || echo 'NOT_FOUND'")
+    if "NOT_FOUND" in token_check:
+        print("Adding APIFY_API_TOKEN to remote .env...")
+        run_cmd(f"echo '\nAPIFY_API_TOKEN={token_val}' >> /opt/nesta-deal-hunter/.env")
+    else:
+        run_cmd(f"sed -i 's/^APIFY_API_TOKEN=.*/APIFY_API_TOKEN={token_val}/' /opt/nesta-deal-hunter/.env")
 
 # 2. Run purge script on remote database
 run_cmd("cd /opt/nesta-deal-hunter && venv/bin/python scripts/purge_bogus_listings.py")
