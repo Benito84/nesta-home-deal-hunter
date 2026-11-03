@@ -25,6 +25,7 @@ from app.ingestion.otodom import OtodomConnector
 from app.ingestion.spoldzielnie import SpoldzielnieConnector
 from app.ingestion.lento import LentoConnector
 from app.ingestion.kurier import KurierConnector
+from app.ingestion.facebook import FacebookConnector
 
 router = APIRouter(tags=["Sources"])
 
@@ -118,7 +119,8 @@ def trigger_scrape_endpoint(session: Session = Depends(get_session)):
         ZbilkConnector(),
         SpoldzielnieConnector(),
         LentoConnector(),
-        KurierConnector()
+        KurierConnector(),
+        FacebookConnector()
     ]
 
     raw_items = []

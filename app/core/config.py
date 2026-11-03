@@ -6,6 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 class Settings:
+    BASE_DIR: Path = BASE_DIR
     APP_NAME: str = "Nesta Deal Hunter Szczecin"
     APP_VERSION: str = "4.16.0"  # SSOT Wersji (Sekcja 3.3)
     DEBUG: bool = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
@@ -42,6 +43,11 @@ class Settings:
     IMAP_USER: str = os.getenv("IMAP_USER", "")
     IMAP_PASSWORD: str = os.getenv("IMAP_PASSWORD", "")
     IMAP_FOLDER: str = os.getenv("IMAP_FOLDER", "INBOX")
+
+    # Apify (Facebook Groups Scraper)
+    APIFY_API_TOKEN: str = os.getenv("APIFY_API_TOKEN", "")
+    FB_GROUPS_URLS: str = os.getenv("FB_GROUPS_URLS", "")
+    FB_COOKIES_PATH: str = os.getenv("FB_COOKIES_PATH", str(BASE_DIR / "data" / "fb_cookies.json"))
 
     # Kryteria inwestycyjne Nesta Home Szczecin
     DEFAULT_MIN_ROI: float = float(os.getenv("DEFAULT_MIN_ROI", "0.16"))

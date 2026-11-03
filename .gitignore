@@ -7,6 +7,8 @@ data/*.db
 data/*.db-wal
 data/*.db-shm
 data/fb_session/
+data/fb_cookies.json
+data/*.json
 scratch/
 logs/
 *.log

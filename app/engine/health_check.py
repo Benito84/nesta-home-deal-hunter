@@ -19,6 +19,7 @@ from app.ingestion.otodom import OtodomConnector
 from app.ingestion.spoldzielnie import SpoldzielnieConnector
 from app.ingestion.lento import LentoConnector
 from app.ingestion.kurier import KurierConnector
+from app.ingestion.facebook import FacebookConnector
 from app.core.config import settings
 
 def test_source_health(source: ScraperSource, session: Session) -> Dict[str, Any]:
@@ -164,6 +165,27 @@ def test_source_health(source: ScraperSource, session: Session) -> Dict[str, Any
                     status = "ERROR"
                     latency_ms = int((time.perf_counter() - start_time) * 1000)
                     message = f"Błąd logowania do skrzynki IMAP: {ie}"
+
+        elif source.code == "facebook":
+            if not settings.APIFY_API_TOKEN:
+                status = "WARNING"
+                message = "Brak klucza APIFY_API_TOKEN w pliku .env. Uzupełnij klucz, aby aktywować scraping grup."
+                latency_ms = 0
+            else:
+                with httpx.Client(timeout=10.0) as client:
+                    resp = client.get(f"https://api.apify.com/v2/users/me?token={settings.APIFY_API_TOKEN}")
+                    latency_ms = int((time.perf_counter() - start_time) * 1000)
+                    if resp.status_code == 200:
+                        uname = resp.json().get("data", {}).get("username", "użytkownik")
+                        conn = FacebookConnector()
+                        cookies = conn.load_cookies()
+                        cookies_status = f"załadowano ({len(cookies)} ciasteczek)" if cookies else "brak pliku cookies (tylko grupy publiczne)"
+                        groups_count = len(conn.get_configured_group_urls())
+                        status = "HEALTHY"
+                        message = f"Klucz Apify aktywny (konto: {uname}). Monitorowanych grup: {groups_count}. Ciasteczka FB: {cookies_status}."
+                    else:
+                        status = "ERROR"
+                        message = f"Nieprawidłowy token Apify (kod HTTP {resp.status_code}): {resp.text[:120]}"
 
         else:
             # Test źródła z kolejki / dowolnego adresu URL

@@ -17,6 +17,7 @@ from app.ingestion.otodom import OtodomConnector
 from app.ingestion.spoldzielnie import SpoldzielnieConnector
 from app.ingestion.lento import LentoConnector
 from app.ingestion.kurier import KurierConnector
+from app.ingestion.facebook import FacebookConnector
 from app.engine.freshness_checker import verify_active_listings_batch
 
 scheduler = BackgroundScheduler(daemon=True)
@@ -34,7 +35,8 @@ def scheduled_scraping_job():
             KomornikConnector(),
             SpoldzielnieConnector(),
             LentoConnector(),
-            KurierConnector()
+            KurierConnector(),
+            FacebookConnector()
         ]
         items = []
         for conn in connectors:

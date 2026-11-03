@@ -27,6 +27,7 @@ AVAILABLE_SOURCES = [
     {"code": "spoldzielnie", "name": "Spółdzielnie mieszkaniowe"},
     {"code": "lento", "name": "Lento.pl Szczecin"},
     {"code": "kurier", "name": "24Kurier.pl (Drobne)"},
+    {"code": "facebook", "name": "Facebook Grupy"},
     {"code": "manual", "name": "Szybka wklejka"}
 ]
 

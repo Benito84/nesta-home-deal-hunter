@@ -324,4 +324,25 @@ def seed_default_sources():
                 kurier_src.is_active = True
                 session.add(kurier_src)
 
+            # Aktywacja Facebook Grupy (Apify)
+            fb_src = session.exec(select(ScraperSource).where(ScraperSource.code.in_(["facebook", "fb_groups"]))).first()
+            if not fb_src:
+                fb_new = ScraperSource(
+                    code="facebook",
+                    name="Facebook Grupy Szczecin (Apify)",
+                    url="https://www.facebook.com/groups/mieszkaniaszczecin",
+                    tier="Tier 1: Poza radarem",
+                    is_active=True,
+                    status="PENDING",
+                    notes="Grupy mieszkaniowe Szczecin przez chmurę Apify (Zero-Ban, wsparcie ciasteczek sesyjnych)"
+                )
+                session.add(fb_new)
+            else:
+                fb_src.code = "facebook"
+                fb_src.name = "Facebook Grupy Szczecin (Apify)"
+                fb_src.tier = "Tier 1: Poza radarem"
+                fb_src.is_active = True
+                fb_src.notes = "Grupy mieszkaniowe Szczecin przez chmurę Apify (Zero-Ban, wsparcie ciasteczek sesyjnych)"
+                session.add(fb_src)
+
             session.commit()
